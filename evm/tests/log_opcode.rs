@@ -49,7 +49,9 @@ fn test_log_opcodes() -> anyhow::Result<()> {
     let sender_nibbles = Nibbles::from_bytes_be(sender_state_key.as_bytes()).unwrap();
     let to_nibbles = Nibbles::from_bytes_be(to_hashed.as_bytes()).unwrap();
 
-    // For the first code transaction code, we consider two LOG opcodes. The first deals with 0 topics and empty data. The second deals with two topics, and data of length 5, stored in memory.
+    // For the first code transaction code, we consider two LOG opcodes. The first
+    // deals with 0 topics and empty data. The second deals with two topics, and
+    // data of length 5, stored in memory.
     let code = [
         0x64, 0xA1, 0xB2, 0xC3, 0xD4, 0xE5, 0x60, 0x0, 0x52, // MSTORE(0x0, 0xA1B2C3D4E5)
         0x60, 0x0, 0x60, 0x0, 0xA0, // LOG0(0x0, 0x0)
@@ -103,7 +105,8 @@ fn test_log_opcodes() -> anyhow::Result<()> {
         &HashMap::new(),
     );
 
-    // We now add two receipts with logs and data. This updates the receipt trie as well.
+    // We now add two receipts with logs and data. This updates the receipt trie as
+    // well.
     let log_0 = LogRlp {
         address: hex!("7ef66b77759e12Caf3dDB3E4AFF524E577C59D8D").into(),
         topics: vec![
@@ -123,7 +126,8 @@ fn test_log_opcodes() -> anyhow::Result<()> {
             logs: vec![log_0],
         };
 
-    // Insert the first receipt into the initial receipt trie. The initial receipts trie has an initial node with a random nibble.
+    // Insert the first receipt into the initial receipt trie. The initial receipts
+    // trie has an initial node with a random nibble.
     let mut receipts_trie = HashedPartialTrie::from(Node::Empty);
     receipts_trie.insert(
         Nibbles::from_str("0x1337").unwrap(),
@@ -157,8 +161,8 @@ fn test_log_opcodes() -> anyhow::Result<()> {
     contract_code.insert(hash_bytecode_u256(vec![]), vec![]);
     contract_code.insert(code_hash, code.to_vec());
 
-    // Update the state and receipt tries after the transaction, so that we have the correct expected tries:
-    // Update accounts
+    // Update the state and receipt tries after the transaction, so that we have the
+    // correct expected tries: Update accounts
     let beneficiary_account_after = AccountRlp {
         nonce: 1.into(),
         ..AccountRlp::default()
@@ -186,8 +190,8 @@ fn test_log_opcodes() -> anyhow::Result<()> {
     let second_log = LogRlp {
         address: to.into(),
         topics: vec![
-            hex!("0000000000000000000000000000000000000000000000000000000000000062").into(), // dec: 98
-            hex!("0000000000000000000000000000000000000000000000000000000000000063").into(), // dec: 99
+            hex!("0000000000000000000000000000000000000000000000000000000000000062").into(), /* dec: 98 */
+            hex!("0000000000000000000000000000000000000000000000000000000000000063").into(), /* dec: 99 */
         ],
         data: hex!("a1b2c3d4e5").to_vec().into(),
     };
@@ -267,8 +271,8 @@ fn test_log_opcodes() -> anyhow::Result<()> {
 //     init_logger();
 //
 //     let code = [
-//         0x64, 0xA1, 0xB2, 0xC3, 0xD4, 0xE5, 0x60, 0x0, 0x52, // MSTORE(0x0, 0xA1B2C3D4E5)
-//         0x60, 0x0, 0x60, 0x0, 0xA0, // LOG0(0x0, 0x0)
+//         0x64, 0xA1, 0xB2, 0xC3, 0xD4, 0xE5, 0x60, 0x0, 0x52, // MSTORE(0x0,
+// 0xA1B2C3D4E5)         0x60, 0x0, 0x60, 0x0, 0xA0, // LOG0(0x0, 0x0)
 //         0x60, 99, 0x60, 98, 0x60, 5, 0x60, 27, 0xA2, // LOG2(27, 5, 98, 99)
 //         0x00,
 //     ];
@@ -297,10 +301,13 @@ fn test_log_opcodes() -> anyhow::Result<()> {
 //     let to_hashed = keccak(to_first);
 //     let to_hashed_2 = keccak(to);
 //
-//     let beneficiary_nibbles = Nibbles::from_bytes_be(beneficiary_state_key.as_bytes()).unwrap();
-//     let sender_nibbles = Nibbles::from_bytes_be(sender_state_key.as_bytes()).unwrap();
+//     let beneficiary_nibbles =
+// Nibbles::from_bytes_be(beneficiary_state_key.as_bytes()).unwrap();
+//     let sender_nibbles =
+// Nibbles::from_bytes_be(sender_state_key.as_bytes()).unwrap();
 //     let to_nibbles = Nibbles::from_bytes_be(to_hashed.as_bytes()).unwrap();
-//     let to_second_nibbles = Nibbles::from_bytes_be(to_hashed_2.as_bytes()).unwrap();
+//     let to_second_nibbles =
+// Nibbles::from_bytes_be(to_hashed_2.as_bytes()).unwrap();
 //
 //     let beneficiary_account_before = AccountRlp {
 //         nonce: 1.into(),
@@ -319,8 +326,8 @@ fn test_log_opcodes() -> anyhow::Result<()> {
 //         ..AccountRlp::default()
 //     };
 //
-//     // In the first transaction, the sender account sends `txn_value` to `to_account`.
-//     let gas_price = 10;
+//     // In the first transaction, the sender account sends `txn_value` to
+// `to_account`.     let gas_price = 10;
 //     let txn_value = 0xau64;
 //     let mut state_smt_before = Smt::<MemoryDb>::default();
 //     set_account(
@@ -347,7 +354,8 @@ fn test_log_opcodes() -> anyhow::Result<()> {
 //         &to_account_second_before,
 //         &HashMap::new(),
 //     );
-//     let checkpoint_state_trie_root = H256::from_uint(&hashout2u(state_smt_before.root));
+//     let checkpoint_state_trie_root =
+// H256::from_uint(&hashout2u(state_smt_before.root));
 //
 //     let tries_before = TrieInputs {
 //         state_smt: state_smt_before.serialize(),
@@ -355,7 +363,9 @@ fn test_log_opcodes() -> anyhow::Result<()> {
 //         receipts_trie: Node::Empty.into(),
 //     };
 //
-//     let txn = hex!("f85f800a82520894095e7baea6a6c7c4c2dfeb977efac326af552d870a8026a0122f370ed4023a6c253350c6bfb87d7d7eb2cd86447befee99e0a26b70baec20a07100ab1b3977f2b4571202b9f4b68850858caf5469222794600b5ce1cfb348ad");
+//     let txn =
+// hex!("f85f800a82520894095e7baea6a6c7c4c2dfeb977efac326af552d870a8026a0122f370ed4023a6c253350c6bfb87d7d7eb2cd86447befee99e0a26b70baec20a07100ab1b3977f2b4571202b9f4b68850858caf5469222794600b5ce1cfb348ad"
+// );
 //
 //     let block_1_metadata = BlockMetadata {
 //         block_beneficiary: Address::from(beneficiary),
@@ -370,17 +380,21 @@ fn test_log_opcodes() -> anyhow::Result<()> {
 //             0.into(),
 //             0.into(),
 //             U256::from_dec_str(
-//                 "55213970774324510299479508399853534522527075462195808724319849722937344",
+//                 
+// "55213970774324510299479508399853534522527075462195808724319849722937344",
 //             )
 //             .unwrap(),
-//             U256::from_dec_str("1361129467683753853853498429727072845824").unwrap(),
+//             
+// U256::from_dec_str("1361129467683753853853498429727072845824").unwrap(),
 //             33554432.into(),
 //             U256::from_dec_str("9223372036854775808").unwrap(),
 //             U256::from_dec_str(
-//                 "3618502788666131106986593281521497120414687020801267626233049500247285563392",
-//             )
+//                 
+// "3618502788666131106986593281521497120414687020801267626233049500247285563392"
+// ,             )
 //             .unwrap(),
-//             U256::from_dec_str("2722259584404615024560450425766186844160").unwrap(),
+//             
+// U256::from_dec_str("2722259584404615024560450425766186844160").unwrap(),
 //         ],
 //         block_random: Default::default(),
 //     };
@@ -390,8 +404,8 @@ fn test_log_opcodes() -> anyhow::Result<()> {
 //         ..AccountRlp::default()
 //     };
 //
-//     let sender_balance_after = sender_balance_before - gas_price * 21000 - txn_value;
-//     let sender_account_after = AccountRlp {
+//     let sender_balance_after = sender_balance_before - gas_price * 21000 -
+// txn_value;     let sender_account_after = AccountRlp {
 //         balance: sender_balance_after,
 //         nonce: 1.into(),
 //         ..AccountRlp::default()
@@ -451,13 +465,15 @@ fn test_log_opcodes() -> anyhow::Result<()> {
 //     .into();
 //
 //     let tries_after = TrieRoots {
-//         state_root: H256::from_uint(&hashout2u(expected_state_smt_after.root)),
+//         state_root:
+// H256::from_uint(&hashout2u(expected_state_smt_after.root)),
 //         transactions_root: transactions_trie.hash(),
 //         receipts_root: receipts_trie.clone().hash(),
 //     };
 //
 //     let block_1_hash =
-//         H256::from_str("0x0101010101010101010101010101010101010101010101010101010101010101")?;
+//         H256::from_str("
+// 0x0101010101010101010101010101010101010101010101010101010101010101")?;
 //     let mut block_hashes = vec![H256::default(); 256];
 //
 //     let inputs_first = GenerationInputs {
@@ -486,15 +502,18 @@ fn test_log_opcodes() -> anyhow::Result<()> {
 //
 //     let mut timing = TimingTree::new("prove root first", log::Level::Info);
 //     let (root_proof_first, public_values_first) =
-//         all_circuits.prove_root(&all_stark, &config, inputs_first, &mut timing, None)?;
+//         all_circuits.prove_root(&all_stark, &config, inputs_first, &mut
+// timing, None)?;
 //
 //     timing.filter(Duration::from_millis(100)).print();
 //     all_circuits.verify_root(root_proof_first.clone())?;
 //
-//     // The gas used and transaction number are fed to the next transaction, so the two proofs can be correctly aggregated.
-//     let gas_used_second = public_values_first.extra_block_data.gas_used_after;
+//     // The gas used and transaction number are fed to the next transaction,
+// so the two proofs can be correctly aggregated.     let gas_used_second =
+// public_values_first.extra_block_data.gas_used_after;
 //
-//     // Prove second transaction. In this second transaction, the code with logs is executed.
+//     // Prove second transaction. In this second transaction, the code with
+// logs is executed.
 //
 //     let state_trie_before = expected_state_trie_after;
 //
@@ -506,21 +525,23 @@ fn test_log_opcodes() -> anyhow::Result<()> {
 //
 //     // Prove a transaction which carries out two LOG opcodes.
 //     let txn_gas_price = 10;
-//     let txn_2 = hex!("f860010a830186a094095e7baea6a6c7c4c2dfeb977efac326af552e89808025a04a223955b0bd3827e3740a9a427d0ea43beb5bafa44a0204bf0a3306c8219f7ba0502c32d78f233e9e7ce9f5df3b576556d5d49731e0678fd5a068cdf359557b5b");
+//     let txn_2 =
+// hex!("f860010a830186a094095e7baea6a6c7c4c2dfeb977efac326af552e89808025a04a223955b0bd3827e3740a9a427d0ea43beb5bafa44a0204bf0a3306c8219f7ba0502c32d78f233e9e7ce9f5df3b576556d5d49731e0678fd5a068cdf359557b5b"
+// );
 //
 //     let mut contract_code = HashMap::new();
 //     contract_code.insert(keccak(vec![]), vec![]);
 //     contract_code.insert(code_hash, code.to_vec());
 //
-//     // Update the state and receipt tries after the transaction, so that we have the correct expected tries:
-//     // Update accounts.
+//     // Update the state and receipt tries after the transaction, so that we
+// have the correct expected tries:     // Update accounts.
 //     let beneficiary_account_after = AccountRlp {
 //         nonce: 1.into(),
 //         ..AccountRlp::default()
 //     };
 //
-//     let sender_balance_after = sender_balance_after - gas_used * txn_gas_price;
-//     let sender_account_after = AccountRlp {
+//     let sender_balance_after = sender_balance_after - gas_used *
+// txn_gas_price;     let sender_account_after = AccountRlp {
 //         balance: sender_balance_after,
 //         nonce: 2.into(),
 //         ..AccountRlp::default()
@@ -546,17 +567,20 @@ fn test_log_opcodes() -> anyhow::Result<()> {
 //     let second_log = LogRlp {
 //         address: to.into(),
 //         topics: vec![
-//             hex!("0000000000000000000000000000000000000000000000000000000000000062").into(), // dec: 98
-//             hex!("0000000000000000000000000000000000000000000000000000000000000063").into(), // dec: 99
-//         ],
+//             
+// hex!("0000000000000000000000000000000000000000000000000000000000000062").
+// into(), // dec: 98             
+// hex!("0000000000000000000000000000000000000000000000000000000000000063").
+// into(), // dec: 99         ],
 //         data: hex!("a1b2c3d4e5").to_vec().into(),
 //     };
 //
 //     let receipt = LegacyReceiptRlp {
 //         status: true,
 //         cum_gas_used: (22570 + 21000).into(),
-//         bloom: hex!("00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000008000000000000000001000000000000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000800000000000000008000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000800002000000000000000000000000000").to_vec().into(),
-//         logs: vec![first_log, second_log],
+//         bloom:
+// hex!("00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000008000000000000000001000000000000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000800000000000000008000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000800002000000000000000000000000000"
+// ).to_vec().into(),         logs: vec![first_log, second_log],
 //     };
 //
 //     let receipt_nibbles = Nibbles::from_str("0x01").unwrap(); // RLP(1) = 0x1
@@ -569,14 +593,16 @@ fn test_log_opcodes() -> anyhow::Result<()> {
 //         beneficiary_nibbles,
 //         rlp::encode(&beneficiary_account_after).to_vec(),
 //     );
-//     expected_state_trie_after.insert(sender_nibbles, rlp::encode(&sender_account_after).to_vec());
-//     expected_state_trie_after.insert(to_nibbles, rlp::encode(&to_account_after).to_vec());
+//     expected_state_trie_after.insert(sender_nibbles,
+// rlp::encode(&sender_account_after).to_vec());     expected_state_trie_after.
+// insert(to_nibbles, rlp::encode(&to_account_after).to_vec());
 //     expected_state_trie_after.insert(
 //         to_second_nibbles,
 //         rlp::encode(&to_account_second_after).to_vec(),
 //     );
 //
-//     transactions_trie.insert(Nibbles::from_str("0x01").unwrap(), txn_2.to_vec());
+//     transactions_trie.insert(Nibbles::from_str("0x01").unwrap(),
+// txn_2.to_vec());
 //
 //     let block_1_state_root = expected_state_trie_after.hash();
 //
@@ -605,13 +631,13 @@ fn test_log_opcodes() -> anyhow::Result<()> {
 //
 //     let mut timing = TimingTree::new("prove root second", log::Level::Info);
 //     let (root_proof_second, public_values_second) =
-//         all_circuits.prove_root(&all_stark, &config, inputs, &mut timing, None.clone())?;
-//     timing.filter(Duration::from_millis(100)).print();
+//         all_circuits.prove_root(&all_stark, &config, inputs, &mut timing,
+// None.clone())?;     timing.filter(Duration::from_millis(100)).print();
 //
 //     all_circuits.verify_root(root_proof_second.clone())?;
 //
-//     let (agg_proof, updated_agg_public_values) = all_circuits.prove_aggregation(
-//         false,
+//     let (agg_proof, updated_agg_public_values) =
+// all_circuits.prove_aggregation(         false,
 //         &root_proof_first,
 //         public_values_first,
 //         false,
@@ -620,13 +646,15 @@ fn test_log_opcodes() -> anyhow::Result<()> {
 //     )?;
 //     all_circuits.verify_aggregation(&agg_proof)?;
 //     let (first_block_proof, _block_public_values) =
-//         all_circuits.prove_block(None, &agg_proof, updated_agg_public_values)?;
-//     all_circuits.verify_block(&first_block_proof)?;
+//         all_circuits.prove_block(None, &agg_proof,
+// updated_agg_public_values)?;     all_circuits.verify_block(&
+// first_block_proof)?;
 //
 //     // Prove the next, empty block.
 //
 //     let block_2_hash =
-//         H256::from_str("0x0123456789101112131415161718192021222324252627282930313233343536")?;
+//         H256::from_str("
+// 0x0123456789101112131415161718192021222324252627282930313233343536")?;
 //     block_hashes[255] = block_1_hash;
 //
 //     let block_2_metadata = BlockMetadata {
@@ -658,8 +686,8 @@ fn test_log_opcodes() -> anyhow::Result<()> {
 //             receipts_root: HashedPartialTrie::from(Node::Empty).hash(),
 //         },
 //         contract_code,
-//         checkpoint_state_trie_root: block_1_state_root, // We use block 1 as new checkpoint.
-//         block_metadata: block_2_metadata,
+//         checkpoint_state_trie_root: block_1_state_root, // We use block 1 as
+// new checkpoint.         block_metadata: block_2_metadata,
 //         txn_number_before: 0.into(),
 //         gas_used_before: 0.into(),
 //         gas_used_after: 0.into(),
@@ -670,12 +698,12 @@ fn test_log_opcodes() -> anyhow::Result<()> {
 //     };
 //
 //     let (root_proof, public_values) =
-//         all_circuits.prove_root(&all_stark, &config, inputs, &mut timing, None)?;
-//     all_circuits.verify_root(root_proof.clone())?;
+//         all_circuits.prove_root(&all_stark, &config, inputs, &mut timing,
+// None)?;     all_circuits.verify_root(root_proof.clone())?;
 //
 //     // We can just duplicate the initial proof as the state didn't change.
-//     let (agg_proof, updated_agg_public_values) = all_circuits.prove_aggregation(
-//         false,
+//     let (agg_proof, updated_agg_public_values) =
+// all_circuits.prove_aggregation(         false,
 //         &root_proof,
 //         public_values.clone(),
 //         false,
@@ -684,9 +712,9 @@ fn test_log_opcodes() -> anyhow::Result<()> {
 //     )?;
 //     all_circuits.verify_aggregation(&agg_proof)?;
 //
-//     let (second_block_proof, _block_public_values) = all_circuits.prove_block(
-//         None, // We don't specify a previous proof, considering block 1 as the new checkpoint.
-//         &agg_proof,
+//     let (second_block_proof, _block_public_values) =
+// all_circuits.prove_block(         None, // We don't specify a previous proof,
+// considering block 1 as the new checkpoint.         &agg_proof,
 //         updated_agg_public_values,
 //     )?;
 //     all_circuits.verify_block(&second_block_proof)
@@ -695,23 +723,28 @@ fn test_log_opcodes() -> anyhow::Result<()> {
 // /// Values taken from the block 1000000 of Goerli: https://goerli.etherscan.io/txs?block=1000000
 // #[test]
 // fn test_txn_and_receipt_trie_hash() -> anyhow::Result<()> {
-//     // This test checks that inserting into the transaction and receipt `HashedPartialTrie`s works as expected.
-//     let mut example_txn_trie = HashedPartialTrie::from(Node::Empty);
+//     // This test checks that inserting into the transaction and receipt
+// `HashedPartialTrie`s works as expected.     let mut example_txn_trie =
+// HashedPartialTrie::from(Node::Empty);
 //
 //     // We consider two transactions, with one log each.
 //     let transaction_0 = LegacyTransactionRlp {
 //         nonce: 157823u64.into(),
 //         gas_price: 1000000000u64.into(),
 //         gas: 250000u64.into(),
-//         to: AddressOption(Some(hex!("7ef66b77759e12Caf3dDB3E4AFF524E577C59D8D").into())),
+//         to:
+// AddressOption(Some(hex!("7ef66b77759e12Caf3dDB3E4AFF524E577C59D8D").into())),
 //         value: 0u64.into(),
-//         data: hex!("e9c6c176000000000000000000000000000000000000000000000000000000000000002a0000000000000000000000000000000000000000000000000000000000bd9fe6f7af1cc94b1aef2e0fa15f1b4baefa86eb60e78fa4bd082372a0a446d197fb58")
-//             .to_vec()
+//         data:
+// hex!("e9c6c176000000000000000000000000000000000000000000000000000000000000002a0000000000000000000000000000000000000000000000000000000000bd9fe6f7af1cc94b1aef2e0fa15f1b4baefa86eb60e78fa4bd082372a0a446d197fb58"
+// )             .to_vec()
 //             .into(),
 //         v: 0x1c.into(),
-//         r: hex!("d0eeac4841caf7a894dd79e6e633efc2380553cdf8b786d1aa0b8a8dee0266f4").into(),
-//         s: hex!("740710eed9696c663510b7fb71a553112551121595a54ec6d2ec0afcec72a973").into(),
-//     };
+//         r:
+// hex!("d0eeac4841caf7a894dd79e6e633efc2380553cdf8b786d1aa0b8a8dee0266f4").
+// into(),         s:
+// hex!("740710eed9696c663510b7fb71a553112551121595a54ec6d2ec0afcec72a973").
+// into(),     };
 //
 //     // Insert the first transaction into the transaction trie.
 //     example_txn_trie.insert(
@@ -723,15 +756,19 @@ fn test_log_opcodes() -> anyhow::Result<()> {
 //         nonce: 157824u64.into(),
 //         gas_price: 1000000000u64.into(),
 //         gas: 250000u64.into(),
-//         to: AddressOption(Some(hex!("7ef66b77759e12Caf3dDB3E4AFF524E577C59D8D").into())),
+//         to:
+// AddressOption(Some(hex!("7ef66b77759e12Caf3dDB3E4AFF524E577C59D8D").into())),
 //         value: 0u64.into(),
-//         data: hex!("e9c6c176000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000004920eaa814f7df6a2203dc0e472e8828be95957c6b329fee8e2b1bb6f044c1eb4fc243")
-//             .to_vec()
+//         data:
+// hex!("e9c6c176000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000004920eaa814f7df6a2203dc0e472e8828be95957c6b329fee8e2b1bb6f044c1eb4fc243"
+// )             .to_vec()
 //             .into(),
 //         v: 0x1b.into(),
-//         r: hex!("a3ff39967683fc684dc7b857d6f62723e78804a14b091a058ad95cc1b8a0281f").into(),
-//         s: hex!("51b156e05f21f499fa1ae47ebf536b15a237208f1d4a62e33956b6b03cf47742").into(),
-//     };
+//         r:
+// hex!("a3ff39967683fc684dc7b857d6f62723e78804a14b091a058ad95cc1b8a0281f").
+// into(),         s:
+// hex!("51b156e05f21f499fa1ae47ebf536b15a237208f1d4a62e33956b6b03cf47742").
+// into(),     };
 //
 //     // Insert the second transaction into the transaction trie.
 //     example_txn_trie.insert(
@@ -745,11 +782,15 @@ fn test_log_opcodes() -> anyhow::Result<()> {
 //     let log_0 = LogRlp {
 //         address: hex!("7ef66b77759e12Caf3dDB3E4AFF524E577C59D8D").into(),
 //         topics: vec![
-//             hex!("8a22ee899102a366ac8ad0495127319cb1ff2403cfae855f83a89cda1266674d").into(),
-//             hex!("000000000000000000000000000000000000000000000000000000000000002a").into(),
-//             hex!("0000000000000000000000000000000000000000000000000000000000bd9fe6").into(),
-//         ],
-//         data: hex!("f7af1cc94b1aef2e0fa15f1b4baefa86eb60e78fa4bd082372a0a446d197fb58")
+//             
+// hex!("8a22ee899102a366ac8ad0495127319cb1ff2403cfae855f83a89cda1266674d").
+// into(),             
+// hex!("000000000000000000000000000000000000000000000000000000000000002a").
+// into(),             
+// hex!("0000000000000000000000000000000000000000000000000000000000bd9fe6").
+// into(),         ],
+//         data:
+// hex!("f7af1cc94b1aef2e0fa15f1b4baefa86eb60e78fa4bd082372a0a446d197fb58")
 //             .to_vec()
 //             .into(),
 //     };
@@ -757,8 +798,9 @@ fn test_log_opcodes() -> anyhow::Result<()> {
 //     let receipt_0 = LegacyReceiptRlp {
 //             status: true,
 //             cum_gas_used: 0x016e5bu64.into(),
-//             bloom: hex!("00000000000000000000000000000000000000000000000000800000000000000040000000005000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000000000000000000080008000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000020000000000008000000000000000000000000").to_vec().into(),
-//             logs: vec![log_0],
+//             bloom:
+// hex!("00000000000000000000000000000000000000000000000000800000000000000040000000005000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000000000000000000080008000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000020000000000008000000000000000000000000"
+// ).to_vec().into(),             logs: vec![log_0],
 //         };
 //
 //     // Insert the first receipt into the receipt trie.
@@ -770,11 +812,15 @@ fn test_log_opcodes() -> anyhow::Result<()> {
 //     let log_1 = LogRlp {
 //         address: hex!("7ef66b77759e12Caf3dDB3E4AFF524E577C59D8D").into(),
 //         topics: vec![
-//             hex!("8a22ee899102a366ac8ad0495127319cb1ff2403cfae855f83a89cda1266674d").into(),
-//             hex!("0000000000000000000000000000000000000000000000000000000000000004").into(),
-//             hex!("00000000000000000000000000000000000000000000000000000000004920ea").into(),
-//         ],
-//         data: hex!("a814f7df6a2203dc0e472e8828be95957c6b329fee8e2b1bb6f044c1eb4fc243")
+//             
+// hex!("8a22ee899102a366ac8ad0495127319cb1ff2403cfae855f83a89cda1266674d").
+// into(),             
+// hex!("0000000000000000000000000000000000000000000000000000000000000004").
+// into(),             
+// hex!("00000000000000000000000000000000000000000000000000000000004920ea").
+// into(),         ],
+//         data:
+// hex!("a814f7df6a2203dc0e472e8828be95957c6b329fee8e2b1bb6f044c1eb4fc243")
 //             .to_vec()
 //             .into(),
 //     };
@@ -782,8 +828,9 @@ fn test_log_opcodes() -> anyhow::Result<()> {
 //     let receipt_1 = LegacyReceiptRlp {
 //             status: true,
 //             cum_gas_used: 0x02dcb6u64.into(),
-//             bloom: hex!("00000000000000000000000000000000000000000000000000800000000000000040000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000008000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000400000000000000000000000000000002000040000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000008000000000000000000000000").to_vec().into(),
-//             logs: vec![log_1],
+//             bloom:
+// hex!("00000000000000000000000000000000000000000000000000800000000000000040000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000008000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000400000000000000000000000000000002000040000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000008000000000000000000000000"
+// ).to_vec().into(),             logs: vec![log_1],
 //         };
 //
 //     // Insert the second receipt into the receipt trie.
@@ -795,12 +842,14 @@ fn test_log_opcodes() -> anyhow::Result<()> {
 //     // Check that the trie hashes are correct.
 //     assert_eq!(
 //         example_txn_trie.hash(),
-//         hex!("3ab7120d12e1fc07303508542602beb7eecfe8f262b83fd71eefe7d6205242ce").into()
+//         hex!("
+// 3ab7120d12e1fc07303508542602beb7eecfe8f262b83fd71eefe7d6205242ce").into()
 //     );
 //
 //     assert_eq!(
 //         example_receipt_trie.hash(),
-//         hex!("da46cdd329bfedace32da95f2b344d314bc6f55f027d65f9f4ac04ee425e1f98").into()
+//         hex!("
+// da46cdd329bfedace32da95f2b344d314bc6f55f027d65f9f4ac04ee425e1f98").into()
 //     );
 //
 //     Ok(())

@@ -26,8 +26,10 @@
 //     let sender_state_key = keccak(sender);
 //     let to_hashed = keccak(to);
 
-//     let beneficiary_nibbles = Nibbles::from_bytes_be(beneficiary_state_key.as_bytes()).unwrap();
-//     let sender_nibbles = Nibbles::from_bytes_be(sender_state_key.as_bytes()).unwrap();
+//     let beneficiary_nibbles =
+// Nibbles::from_bytes_be(beneficiary_state_key.as_bytes()).unwrap();
+//     let sender_nibbles =
+// Nibbles::from_bytes_be(sender_state_key.as_bytes()).unwrap();
 //     let to_nibbles = Nibbles::from_bytes_be(to_hashed.as_bytes()).unwrap();
 
 //     let code = [0x60, 0x01, 0x60, 0x01, 0x01, 0x60, 0x00, 0x55, 0x00];
@@ -56,8 +58,9 @@
 //         beneficiary_nibbles,
 //         rlp::encode(&beneficiary_account_before).to_vec(),
 //     );
-//     state_trie_before.insert(sender_nibbles, rlp::encode(&sender_account_before).to_vec());
-//     state_trie_before.insert(to_nibbles, rlp::encode(&to_account_before).to_vec());
+//     state_trie_before.insert(sender_nibbles,
+// rlp::encode(&sender_account_before).to_vec());     state_trie_before.
+// insert(to_nibbles, rlp::encode(&to_account_before).to_vec());
 
 //     let tries_before = TrieInputs {
 //         state_trie: state_trie_before,
@@ -66,7 +69,9 @@
 //         storage_tries: vec![(to_hashed, Node::Empty.into())],
 //     };
 
-//     let txn = hex!("f863800a83061a8094095e7baea6a6c7c4c2dfeb977efac326af552d87830186a0801ba0ffb600e63115a7362e7811894a91d8ba4330e526f22121c994c4692035dfdfd5a06198379fcac8de3dbfac48b165df4bf88e2088f294b61efb9a65fe2281c76e16");
+//     let txn =
+// hex!("f863800a83061a8094095e7baea6a6c7c4c2dfeb977efac326af552d87830186a0801ba0ffb600e63115a7362e7811894a91d8ba4330e526f22121c994c4692035dfdfd5a06198379fcac8de3dbfac48b165df4bf88e2088f294b61efb9a65fe2281c76e16"
+// );
 
 //     let gas_used = 0xa868u64.into();
 
@@ -92,15 +97,16 @@
 //             ..AccountRlp::default()
 //         };
 
-//         let mut expected_state_trie_after = HashedPartialTrie::from(Node::Empty);
-//         expected_state_trie_after.insert(
-//             beneficiary_nibbles,
+//         let mut expected_state_trie_after =
+// HashedPartialTrie::from(Node::Empty);         expected_state_trie_after.
+// insert(             beneficiary_nibbles,
 //             rlp::encode(&beneficiary_account_after).to_vec(),
 //         );
 //         expected_state_trie_after
-//             .insert(sender_nibbles, rlp::encode(&sender_account_after).to_vec());
-//         expected_state_trie_after.insert(to_nibbles, rlp::encode(&to_account_after).to_vec());
-//         expected_state_trie_after
+//             .insert(sender_nibbles,
+// rlp::encode(&sender_account_after).to_vec());
+//         expected_state_trie_after.insert(to_nibbles,
+// rlp::encode(&to_account_after).to_vec());         expected_state_trie_after
 //     };
 //     let receipt_0 = LegacyReceiptRlp {
 //         status: true,
@@ -145,9 +151,9 @@
 //         trie_roots_after,
 //         contract_code: contract_code.clone(),
 //         block_metadata,
-//         checkpoint_state_trie_root: HashedPartialTrie::from(Node::Empty).hash(),
-//         txn_number_before: 0.into(),
-//         gas_used_before: 0.into(),
+//         checkpoint_state_trie_root:
+// HashedPartialTrie::from(Node::Empty).hash(),         txn_number_before:
+// 0.into(),         gas_used_before: 0.into(),
 //         gas_used_after: gas_used,
 //         block_hashes: BlockHashes {
 //             prev_hashes: vec![H256::default(); 256],
@@ -157,29 +163,33 @@
 
 //     let initial_stack = vec![];
 //     let mut interpreter: Interpreter<F> =
-//         Interpreter::new_with_generation_inputs_and_kernel(0, initial_stack, tries_inputs);
+//         Interpreter::new_with_generation_inputs_and_kernel(0, initial_stack,
+// tries_inputs);
 
 //     let route_txn_label = KERNEL.global_labels["main"];
-//     // Switch context and initialize memory with the data we need for the tests.
-//     interpreter.generation_state.registers.program_counter = route_txn_label;
-//     interpreter.set_context_metadata_field(0, ContextMetadata::GasLimit, 1_000_000.into());
-//     interpreter.set_is_kernel(true);
-//     interpreter.run().expect("Proving add11 failed.");
+//     // Switch context and initialize memory with the data we need for the
+// tests.     interpreter.generation_state.registers.program_counter =
+// route_txn_label;     interpreter.set_context_metadata_field(0,
+// ContextMetadata::GasLimit, 1_000_000.into());     interpreter.
+// set_is_kernel(true);     interpreter.run().expect("Proving add11 failed.");
 // }
 
 // #[test]
 // fn test_add11_yml_with_exception() {
-//     // In this test, we make sure that the user code throws a stack underflow exception.
-//     let beneficiary = hex!("2adc25665018aa1fe0e6bc666dac8fc2697ff9ba");
-//     let sender = hex!("a94f5374fce5edbc8e2a8697c15331677e6ebf0b");
-//     let to = hex!("095e7baea6a6c7c4c2dfeb977efac326af552d87");
+//     // In this test, we make sure that the user code throws a stack underflow
+// exception.     let beneficiary =
+// hex!("2adc25665018aa1fe0e6bc666dac8fc2697ff9ba");     let sender =
+// hex!("a94f5374fce5edbc8e2a8697c15331677e6ebf0b");     let to =
+// hex!("095e7baea6a6c7c4c2dfeb977efac326af552d87");
 
 //     let beneficiary_state_key = keccak(beneficiary);
 //     let sender_state_key = keccak(sender);
 //     let to_hashed = keccak(to);
 
-//     let beneficiary_nibbles = Nibbles::from_bytes_be(beneficiary_state_key.as_bytes()).unwrap();
-//     let sender_nibbles = Nibbles::from_bytes_be(sender_state_key.as_bytes()).unwrap();
+//     let beneficiary_nibbles =
+// Nibbles::from_bytes_be(beneficiary_state_key.as_bytes()).unwrap();
+//     let sender_nibbles =
+// Nibbles::from_bytes_be(sender_state_key.as_bytes()).unwrap();
 //     let to_nibbles = Nibbles::from_bytes_be(to_hashed.as_bytes()).unwrap();
 
 //     let code = [0x60, 0x01, 0x60, 0x01, 0x01, 0x8e, 0x00];
@@ -208,8 +218,9 @@
 //         beneficiary_nibbles,
 //         rlp::encode(&beneficiary_account_before).to_vec(),
 //     );
-//     state_trie_before.insert(sender_nibbles, rlp::encode(&sender_account_before).to_vec());
-//     state_trie_before.insert(to_nibbles, rlp::encode(&to_account_before).to_vec());
+//     state_trie_before.insert(sender_nibbles,
+// rlp::encode(&sender_account_before).to_vec());     state_trie_before.
+// insert(to_nibbles, rlp::encode(&to_account_before).to_vec());
 
 //     let tries_before = TrieInputs {
 //         state_trie: state_trie_before,
@@ -218,30 +229,32 @@
 //         storage_tries: vec![(to_hashed, Node::Empty.into())],
 //     };
 
-//     let txn = hex!("f863800a83061a8094095e7baea6a6c7c4c2dfeb977efac326af552d87830186a0801ba0ffb600e63115a7362e7811894a91d8ba4330e526f22121c994c4692035dfdfd5a06198379fcac8de3dbfac48b165df4bf88e2088f294b61efb9a65fe2281c76e16");
-//     let txn_gas_limit = 400_000;
+//     let txn =
+// hex!("f863800a83061a8094095e7baea6a6c7c4c2dfeb977efac326af552d87830186a0801ba0ffb600e63115a7362e7811894a91d8ba4330e526f22121c994c4692035dfdfd5a06198379fcac8de3dbfac48b165df4bf88e2088f294b61efb9a65fe2281c76e16"
+// );     let txn_gas_limit = 400_000;
 //     let gas_price = 10;
 
-//     // Here, since the transaction fails, it consumes its gas limit, and does nothing else.
-//     let expected_state_trie_after = {
+//     // Here, since the transaction fails, it consumes its gas limit, and does
+// nothing else.     let expected_state_trie_after = {
 //         let beneficiary_account_after = beneficiary_account_before;
-//         // This is the only account that changes: the nonce and the balance are updated.
-//         let sender_account_after = AccountRlp {
-//             balance: sender_account_before.balance - txn_gas_limit * gas_price,
-//             nonce: 1.into(),
+//         // This is the only account that changes: the nonce and the balance
+// are updated.         let sender_account_after = AccountRlp {
+//             balance: sender_account_before.balance - txn_gas_limit *
+// gas_price,             nonce: 1.into(),
 //             ..AccountRlp::default()
 //         };
 //         let to_account_after = to_account_before;
 
-//         let mut expected_state_trie_after = HashedPartialTrie::from(Node::Empty);
-//         expected_state_trie_after.insert(
-//             beneficiary_nibbles,
+//         let mut expected_state_trie_after =
+// HashedPartialTrie::from(Node::Empty);         expected_state_trie_after.
+// insert(             beneficiary_nibbles,
 //             rlp::encode(&beneficiary_account_after).to_vec(),
 //         );
 //         expected_state_trie_after
-//             .insert(sender_nibbles, rlp::encode(&sender_account_after).to_vec());
-//         expected_state_trie_after.insert(to_nibbles, rlp::encode(&to_account_after).to_vec());
-//         expected_state_trie_after
+//             .insert(sender_nibbles,
+// rlp::encode(&sender_account_after).to_vec());
+//         expected_state_trie_after.insert(to_nibbles,
+// rlp::encode(&to_account_after).to_vec());         expected_state_trie_after
 //     };
 
 //     let receipt_0 = LegacyReceiptRlp {
@@ -287,9 +300,9 @@
 //         trie_roots_after,
 //         contract_code: contract_code.clone(),
 //         block_metadata,
-//         checkpoint_state_trie_root: HashedPartialTrie::from(Node::Empty).hash(),
-//         txn_number_before: 0.into(),
-//         gas_used_before: 0.into(),
+//         checkpoint_state_trie_root:
+// HashedPartialTrie::from(Node::Empty).hash(),         txn_number_before:
+// 0.into(),         gas_used_before: 0.into(),
 //         gas_used_after: txn_gas_limit.into(),
 //         block_hashes: BlockHashes {
 //             prev_hashes: vec![H256::default(); 256],
@@ -299,14 +312,15 @@
 
 //     let initial_stack = vec![];
 //     let mut interpreter: Interpreter<F> =
-//         Interpreter::new_with_generation_inputs_and_kernel(0, initial_stack, tries_inputs);
+//         Interpreter::new_with_generation_inputs_and_kernel(0, initial_stack,
+// tries_inputs);
 
 //     let route_txn_label = KERNEL.global_labels["main"];
-//     // Switch context and initialize memory with the data we need for the tests.
-//     interpreter.generation_state.registers.program_counter = route_txn_label;
-//     interpreter.set_context_metadata_field(0, ContextMetadata::GasLimit, 1_000_000.into());
-//     interpreter.set_is_kernel(true);
-//     interpreter
+//     // Switch context and initialize memory with the data we need for the
+// tests.     interpreter.generation_state.registers.program_counter =
+// route_txn_label;     interpreter.set_context_metadata_field(0,
+// ContextMetadata::GasLimit, 1_000_000.into());     interpreter.
+// set_is_kernel(true);     interpreter
 //         .run()
 //         .expect("Proving add11 with exception failed.");
 // }

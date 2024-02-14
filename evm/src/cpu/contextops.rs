@@ -153,8 +153,8 @@ fn eval_packed_set<P: PackedField>(
         yield_constr.constraint(filter * limb);
     }
 
-    // The old SP is decremented (since the new context was popped) and stored in memory.
-    // The new SP is loaded from memory.
+    // The old SP is decremented (since the new context was popped) and stored in
+    // memory. The new SP is loaded from memory.
     // This is all done with CTLs: nothing is constrained here.
 
     // Constrain stack_inv_aux_2.
@@ -164,7 +164,8 @@ fn eval_packed_set<P: PackedField>(
             * (lv.general.stack().stack_inv_aux * lv.opcode_bits[0]
                 - lv.general.stack().stack_inv_aux_2),
     );
-    // The new top is loaded in memory channel 2, if the stack isn't empty (see eval_packed).
+    // The new top is loaded in memory channel 2, if the stack isn't empty (see
+    // eval_packed).
     for (&limb_new_top, &limb_read_top) in new_top_channel
         .value
         .iter()
@@ -202,8 +203,8 @@ fn eval_ext_circuit_set<F: RichField + Extendable<D>, const D: usize>(
         yield_constr.constraint(builder, constr);
     }
 
-    // The old SP is decremented (since the new context was popped) and stored in memory.
-    // The new SP is loaded from memory.
+    // The old SP is decremented (since the new context was popped) and stored in
+    // memory. The new SP is loaded from memory.
     // This is all done with CTLs: nothing is constrained here.
 
     // Constrain stack_inv_aux_2.
@@ -217,7 +218,8 @@ fn eval_ext_circuit_set<F: RichField + Extendable<D>, const D: usize>(
         let constr = builder.mul_extension(lv.op.context_op, diff);
         yield_constr.constraint(builder, constr);
     }
-    // The new top is loaded in memory channel 2, if the stack isn't empty (see eval_packed).
+    // The new top is loaded in memory channel 2, if the stack isn't empty (see
+    // eval_packed).
     for (&limb_new_top, &limb_read_top) in new_top_channel
         .value
         .iter()
@@ -252,8 +254,9 @@ pub(crate) fn eval_packed<P: PackedField>(
     // we can constrain both at the same time.
     let filter = lv.op.context_op;
     let channel = lv.mem_channels[2];
-    // For get_context, we check if lv.stack_len is 0. For set_context, we check if nv.stack_len is 0.
-    // However, for get_context, we can deduce lv.stack_len from nv.stack_len since the operation only pushes.
+    // For get_context, we check if lv.stack_len is 0. For set_context, we check if
+    // nv.stack_len is 0. However, for get_context, we can deduce lv.stack_len
+    // from nv.stack_len since the operation only pushes.
     let stack_len = nv.stack_len - (P::ONES - lv.opcode_bits[0]);
     // Constrain stack_inv_aux. It's 0 if the relevant stack is empty, 1 otherwise.
     yield_constr.constraint(
@@ -293,8 +296,9 @@ pub(crate) fn eval_ext_circuit<F: RichField + Extendable<D>, const D: usize>(
     // we can constrain both at the same time.
     let filter = lv.op.context_op;
     let channel = lv.mem_channels[2];
-    // For get_context, we check if lv.stack_len is 0. For set_context, we check if nv.stack_len is 0.
-    // However, for get_context, we can deduce lv.stack_len from nv.stack_len since the operation only pushes.
+    // For get_context, we check if lv.stack_len is 0. For set_context, we check if
+    // nv.stack_len is 0. However, for get_context, we can deduce lv.stack_len
+    // from nv.stack_len since the operation only pushes.
     let diff = builder.add_const_extension(lv.opcode_bits[0], -F::ONE);
     let stack_len = builder.add_extension(nv.stack_len, diff);
     // Constrain stack_inv_aux. It's 0 if the relevant stack is empty, 1 otherwise.

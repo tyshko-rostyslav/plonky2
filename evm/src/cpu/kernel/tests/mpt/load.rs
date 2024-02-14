@@ -100,8 +100,8 @@ fn load_all_mpts_leaf() -> Result<()> {
 //     };
 
 //     let initial_stack = vec![];
-//     let mut interpreter: Interpreter<F> = Interpreter::new_with_kernel(0, initial_stack);
-//     initialize_mpts(&mut interpreter, &trie_inputs);
+//     let mut interpreter: Interpreter<F> = Interpreter::new_with_kernel(0,
+// initial_stack);     initialize_mpts(&mut interpreter, &trie_inputs);
 //     assert_eq!(interpreter.stack(), vec![]);
 
 //     let type_hash = U256::from(PartialTrieType::Hash as u32);
@@ -111,12 +111,13 @@ fn load_all_mpts_leaf() -> Result<()> {
 //     );
 
 //     assert_eq!(
-//         interpreter.get_global_metadata_field(GlobalMetadata::TransactionTrieRoot),
+//         interpreter.
+// get_global_metadata_field(GlobalMetadata::TransactionTrieRoot),
 //         0.into()
 //     );
 //     assert_eq!(
-//         interpreter.get_global_metadata_field(GlobalMetadata::ReceiptTrieRoot),
-//         0.into()
+//         interpreter.
+// get_global_metadata_field(GlobalMetadata::ReceiptTrieRoot),         0.into()
 //     );
 
 //     Ok(())
@@ -138,16 +139,16 @@ fn load_all_mpts_leaf() -> Result<()> {
 //     };
 
 //     let initial_stack = vec![];
-//     let mut interpreter: Interpreter<F> = Interpreter::new_with_kernel(0, initial_stack);
-//     initialize_mpts(&mut interpreter, &trie_inputs);
+//     let mut interpreter: Interpreter<F> = Interpreter::new_with_kernel(0,
+// initial_stack);     initialize_mpts(&mut interpreter, &trie_inputs);
 //     assert_eq!(interpreter.stack(), vec![]);
 
 //     let type_branch = U256::from(PartialTrieType::Branch as u32);
 //     assert_eq!(
 //         interpreter.get_trie_data(),
 //         vec![
-//             0.into(), // First address is unused, so that 0 can be treated as a null pointer.
-//             type_branch,
+//             0.into(), // First address is unused, so that 0 can be treated as
+// a null pointer.             type_branch,
 //             0.into(), // child 0
 //             0.into(), // ...
 //             0.into(),
@@ -169,12 +170,13 @@ fn load_all_mpts_leaf() -> Result<()> {
 //     );
 
 //     assert_eq!(
-//         interpreter.get_global_metadata_field(GlobalMetadata::TransactionTrieRoot),
+//         interpreter.
+// get_global_metadata_field(GlobalMetadata::TransactionTrieRoot),
 //         0.into()
 //     );
 //     assert_eq!(
-//         interpreter.get_global_metadata_field(GlobalMetadata::ReceiptTrieRoot),
-//         0.into()
+//         interpreter.
+// get_global_metadata_field(GlobalMetadata::ReceiptTrieRoot),         0.into()
 //     );
 
 //     Ok(())
@@ -190,8 +192,8 @@ fn load_all_mpts_leaf() -> Result<()> {
 //     };
 
 //     let initial_stack = vec![];
-//     let mut interpreter: Interpreter<F> = Interpreter::new_with_kernel(0, initial_stack);
-//     initialize_mpts(&mut interpreter, &trie_inputs);
+//     let mut interpreter: Interpreter<F> = Interpreter::new_with_kernel(0,
+// initial_stack);     initialize_mpts(&mut interpreter, &trie_inputs);
 //     assert_eq!(interpreter.stack(), vec![]);
 
 //     let type_extension = U256::from(PartialTrieType::Extension as u32);
@@ -199,8 +201,8 @@ fn load_all_mpts_leaf() -> Result<()> {
 //     assert_eq!(
 //         interpreter.get_trie_data(),
 //         vec![
-//             0.into(), // First address is unused, so that 0 can be treated as a null pointer.
-//             type_extension,
+//             0.into(), // First address is unused, so that 0 can be treated as
+// a null pointer.             type_extension,
 //             3.into(),     // 3 nibbles
 //             0xABC.into(), // key part
 //             5.into(),     // Pointer to the leaf node immediately below.
@@ -212,8 +214,8 @@ fn load_all_mpts_leaf() -> Result<()> {
 //             test_account_1().balance,
 //             13.into(), // pointer to storage trie root
 //             test_account_1().code_hash.into_uint(),
-//             // These last two elements encode the storage trie, which is a hash node.
-//             (PartialTrieType::Hash as u32).into(),
+//             // These last two elements encode the storage trie, which is a
+// hash node.             (PartialTrieType::Hash as u32).into(),
 //             test_account_1().storage_root.into_uint(),
 //         ]
 //     );
@@ -223,7 +225,9 @@ fn load_all_mpts_leaf() -> Result<()> {
 
 // #[test]
 // fn load_mpt_txn_trie() -> Result<()> {
-//     let txn = hex!("f860010a830186a094095e7baea6a6c7c4c2dfeb977efac326af552e89808025a04a223955b0bd3827e3740a9a427d0ea43beb5bafa44a0204bf0a3306c8219f7ba0502c32d78f233e9e7ce9f5df3b576556d5d49731e0678fd5a068cdf359557b5b").to_vec();
+//     let txn =
+// hex!("f860010a830186a094095e7baea6a6c7c4c2dfeb977efac326af552e89808025a04a223955b0bd3827e3740a9a427d0ea43beb5bafa44a0204bf0a3306c8219f7ba0502c32d78f233e9e7ce9f5df3b576556d5d49731e0678fd5a068cdf359557b5b"
+// ).to_vec();
 
 //     let trie_inputs = TrieInputs {
 //         state_trie: Default::default(),
@@ -236,8 +240,8 @@ fn load_all_mpts_leaf() -> Result<()> {
 //     };
 
 //     let initial_stack = vec![];
-//     let mut interpreter: Interpreter<F> = Interpreter::new_with_kernel(0, initial_stack);
-//     initialize_mpts(&mut interpreter, &trie_inputs);
+//     let mut interpreter: Interpreter<F> = Interpreter::new_with_kernel(0,
+// initial_stack);     initialize_mpts(&mut interpreter, &trie_inputs);
 //     assert_eq!(interpreter.stack(), vec![]);
 
 //     let mut expected_trie_data = vec![

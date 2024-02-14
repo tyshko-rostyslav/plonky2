@@ -45,23 +45,28 @@ use crate::witness::util::{mem_write_log, stack_peek};
 pub struct GenerationInputs {
     /// The index of the transaction being proven within its block.
     pub txn_number_before: U256,
-    /// The cumulative gas used through the execution of all transactions prior the current one.
+    /// The cumulative gas used through the execution of all transactions prior
+    /// the current one.
     pub gas_used_before: U256,
-    /// The cumulative gas used after the execution of the current transaction. The exact gas used
-    /// by the current transaction is `gas_used_after` - `gas_used_before`.
+    /// The cumulative gas used after the execution of the current transaction.
+    /// The exact gas used by the current transaction is `gas_used_after` -
+    /// `gas_used_before`.
     pub gas_used_after: U256,
 
-    /// A None would yield an empty proof, otherwise this contains the encoding of a transaction.
+    /// A None would yield an empty proof, otherwise this contains the encoding
+    /// of a transaction.
     pub signed_txn: Option<Vec<u8>>,
-    /// Withdrawal pairs `(addr, amount)`. At the end of the txs, `amount` is added to `addr`'s balance. See EIP-4895.
+    /// Withdrawal pairs `(addr, amount)`. At the end of the txs, `amount` is
+    /// added to `addr`'s balance. See EIP-4895.
     pub withdrawals: Vec<(Address, U256)>,
     pub tries: TrieInputs,
     /// Expected trie roots after the transactions are executed.
     pub trie_roots_after: TrieRoots,
 
     /// State trie root of the checkpoint block.
-    /// This could always be the genesis block of the chain, but it allows a prover to continue proving blocks
-    /// from certain checkpoint heights without requiring proofs for blocks past this checkpoint.
+    /// This could always be the genesis block of the chain, but it allows a
+    /// prover to continue proving blocks from certain checkpoint heights
+    /// without requiring proofs for blocks past this checkpoint.
     pub checkpoint_state_trie_root: H256,
 
     /// Mapping between smart contract code hashes and the contract byte code.
@@ -71,29 +76,34 @@ pub struct GenerationInputs {
     /// Information contained in the block header.
     pub block_metadata: BlockMetadata,
 
-    /// The hash of the current block, and a list of the 256 previous block hashes.
+    /// The hash of the current block, and a list of the 256 previous block
+    /// hashes.
     pub block_hashes: BlockHashes,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct TrieInputs {
-    /// A serialized partial version of the state SMT prior to these transactions. It should include all nodes
-    /// that will be accessed by these transactions.
+    /// A serialized partial version of the state SMT prior to these
+    /// transactions. It should include all nodes that will be accessed by
+    /// these transactions.
     pub state_smt: Vec<U256>,
 
-    /// A partial version of the transaction trie prior to these transactions. It should include all
-    /// nodes that will be accessed by these transactions.
+    /// A partial version of the transaction trie prior to these transactions.
+    /// It should include all nodes that will be accessed by these
+    /// transactions.
     pub transactions_trie: HashedPartialTrie,
 
-    /// A partial version of the receipt trie prior to these transactions. It should include all nodes
-    /// that will be accessed by these transactions.
+    /// A partial version of the receipt trie prior to these transactions. It
+    /// should include all nodes that will be accessed by these
+    /// transactions.
     pub receipts_trie: HashedPartialTrie,
 }
 
 impl Default for TrieInputs {
     fn default() -> Self {
         Self {
-            // First 2 zeros are for the default empty node. The next 2 are for the current empty state trie root.
+            // First 2 zeros are for the default empty node. The next 2 are for the current empty
+            // state trie root.
             state_smt: vec![U256::zero(); 4],
             transactions_trie: Default::default(),
             receipts_trie: Default::default(),
@@ -217,8 +227,9 @@ pub fn generate_traces<F: RichField + Extendable<D>, const D: usize>(
 
     let cpu_res = timed!(timing, "simulate CPU", simulate_cpu(&mut state));
     if cpu_res.is_err() {
-        // Retrieve previous PC (before jumping to KernelPanic), to see if we reached `hash_final_tries`.
-        // We will output debugging information on the final tries only if we got a root mismatch.
+        // Retrieve previous PC (before jumping to KernelPanic), to see if we reached
+        // `hash_final_tries`. We will output debugging information on the final
+        // tries only if we got a root mismatch.
         let previous_pc = state
             .traces
             .cpu
@@ -313,7 +324,8 @@ fn simulate_cpu<F: RichField>(state: &mut GenerationState<F>) -> anyhow::Result<
     let halt_pc = KERNEL.global_labels["halt"];
 
     loop {
-        // If we've reached the kernel's halt routine, and our trace length is a power of 2, stop.
+        // If we've reached the kernel's halt routine, and our trace length is a power
+        // of 2, stop.
         let pc = state.registers.program_counter;
         let halt = state.registers.is_kernel && pc == halt_pc;
         if halt {

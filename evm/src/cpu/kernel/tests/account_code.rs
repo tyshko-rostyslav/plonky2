@@ -212,7 +212,8 @@ fn test_extcodecopy() -> Result<()> {
 
     let extcodecopy = KERNEL.global_labels["sys_extcodecopy"];
 
-    // Put random data in main memory and the `KernelAccountCode` segment for realism.
+    // Put random data in main memory and the `KernelAccountCode` segment for
+    // realism.
     let mut rng = thread_rng();
     for i in 0..2000 {
         interpreter.generation_state.memory.contexts[context].segments
@@ -269,8 +270,9 @@ fn test_extcodecopy() -> Result<()> {
     Ok(())
 }
 
-/// Prepare the interpreter for storage tests by inserting all necessary accounts
-/// in the state trie, adding the code we want to context 1 and switching the context.
+/// Prepare the interpreter for storage tests by inserting all necessary
+/// accounts in the state trie, adding the code we want to context 1 and
+/// switching the context.
 fn prepare_interpreter_all_accounts<F: RichField>(
     interpreter: &mut Interpreter<F>,
     trie_inputs: TrieInputs,
@@ -389,8 +391,9 @@ fn sload() -> Result<()> {
     // We take the same `to` account as in add11_yml.
     let addr = hex!("095e7baea6a6c7c4c2dfeb977efac326af552d87");
 
-    // This code is similar to the one in add11_yml's contract, but we pop the added value
-    // and carry out an SLOAD instead of an SSTORE. We also add a PUSH at the end.
+    // This code is similar to the one in add11_yml's contract, but we pop the added
+    // value and carry out an SLOAD instead of an SSTORE. We also add a PUSH at
+    // the end.
     let code = [
         0x60, 0x01, 0x60, 0x01, 0x01, 0x50, 0x60, 0x00, 0x54, 0x60, 0x03, 0x00,
     ];

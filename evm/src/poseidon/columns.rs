@@ -23,15 +23,16 @@ pub(crate) struct PoseidonColumnsView<T: Copy> {
     /// Holds x^3 for the first element in partial rounds.
     pub cubed_partial: [T; N_PARTIAL_ROUNDS],
 
-    /// Holds the input of the `i`-th S-box of the `round`-th round of the first set
-    /// of full rounds.
+    /// Holds the input of the `i`-th S-box of the `round`-th round of the first
+    /// set of full rounds.
     pub full_sbox_0: [T; POSEIDON_SPONGE_WIDTH * (HALF_N_FULL_ROUNDS - 1)],
 
-    /// Holds the input of the S-box of the `round`-th round of the partial rounds.
+    /// Holds the input of the S-box of the `round`-th round of the partial
+    /// rounds.
     pub partial_sbox: [T; N_PARTIAL_ROUNDS],
 
-    /// Holds the input of the `i`-th S-box of the `round`-th round of the second set
-    /// of full rounds.
+    /// Holds the input of the `i`-th S-box of the `round`-th round of the
+    /// second set of full rounds.
     pub full_sbox_1: [T; POSEIDON_SPONGE_WIDTH * HALF_N_FULL_ROUNDS],
 
     /// The digest, with each element divided into two 32-bit limbs.
@@ -53,14 +54,16 @@ pub(crate) fn reg_input_capacity(i: usize) -> usize {
 }
 
 /// Returns the index the `i`-th x^3 in the `round`-th round for full rounds.
-/// Note: the cubes of the two sets of full rounds are stored one after the other.
+/// Note: the cubes of the two sets of full rounds are stored one after the
+/// other.
 pub(crate) fn reg_cubed_full(round: usize, i: usize) -> usize {
     debug_assert!(i < POSEIDON_SPONGE_WIDTH);
     debug_assert!(round < 2 * HALF_N_FULL_ROUNDS);
     POSEIDON_SPONGE_WIDTH * round + i
 }
 
-/// Returns the index of the `i`-th output capacity element within `output_partial`.
+/// Returns the index of the `i`-th output capacity element within
+/// `output_partial`.
 pub(crate) fn reg_output_capacity(i: usize) -> usize {
     debug_assert!(i < POSEIDON_SPONGE_WIDTH - POSEIDON_SPONGE_RATE);
     POSEIDON_SPONGE_RATE - POSEIDON_DIGEST + i
@@ -72,7 +75,8 @@ pub(crate) fn reg_cubed_partial(round: usize) -> usize {
     round
 }
 
-/// Returns the index of the `i`-th input in the `round`-th round within `full_sbox_0`.
+/// Returns the index of the `i`-th input in the `round`-th round within
+/// `full_sbox_0`.
 pub(crate) fn reg_full_sbox_0(round: usize, i: usize) -> usize {
     debug_assert!(
         round != 0,
@@ -83,13 +87,15 @@ pub(crate) fn reg_full_sbox_0(round: usize, i: usize) -> usize {
     POSEIDON_SPONGE_WIDTH * (round - 1) + i
 }
 
-/// Returns the index of the input of the S-box of the `round`-th round of the partial rounds.
+/// Returns the index of the input of the S-box of the `round`-th round of the
+/// partial rounds.
 pub(crate) fn reg_partial_sbox(round: usize) -> usize {
     debug_assert!(round < N_PARTIAL_ROUNDS);
     round
 }
 
-/// Returns the index of the `i`-th input in the `round`-th round within `full_sbox_1`.
+/// Returns the index of the `i`-th input in the `round`-th round within
+/// `full_sbox_1`.
 pub(crate) fn reg_full_sbox_1(round: usize, i: usize) -> usize {
     debug_assert!(round < HALF_N_FULL_ROUNDS);
     debug_assert!(i < POSEIDON_SPONGE_WIDTH);

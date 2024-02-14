@@ -52,8 +52,9 @@ fn smt_delete_random() -> Result<()> {
     Ok(())
 }
 
-/// Note: The account's storage_root is ignored, as we can't insert a new storage_root without the
-/// accompanying trie data. An empty trie's storage_root is used instead.
+/// Note: The account's storage_root is ignored, as we can't insert a new
+/// storage_root without the accompanying trie data. An empty trie's
+/// storage_root is used instead.
 fn test_state_trie(state_smt: Smt<MemoryDb>, k: Key, value: U256) -> Result<()> {
     let trie_inputs = TrieInputs {
         state_smt: state_smt.serialize(),

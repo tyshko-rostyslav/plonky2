@@ -35,8 +35,9 @@
 //     topic[31] = 4;
 
 //     // Compute the expected Bloom filter.
-//     let test_logs_list = vec![(address.to_fixed_bytes().to_vec(), vec![topic])];
-//     let expected_bloom = logs_bloom_bytes_fn(test_logs_list).to_vec();
+//     let test_logs_list = vec![(address.to_fixed_bytes().to_vec(),
+// vec![topic])];     let expected_bloom =
+// logs_bloom_bytes_fn(test_logs_list).to_vec();
 
 //     // Set memory.
 //     let num_nibbles = 2.into();
@@ -60,18 +61,21 @@
 //             0.into(),                                         // data_len
 //         ],
 //     );
-//     interpreter.set_txn_field(NormalizedTxnField::GasLimit, U256::from(5000));
-//     interpreter.set_memory_segment(Segment::TxnBloom, vec![0.into(); 256]);
-//     interpreter.set_memory_segment(Segment::Logs, vec![0.into()]);
-//     interpreter.set_global_metadata_field(GlobalMetadata::LogsPayloadLen, 58.into());
-//     interpreter.set_global_metadata_field(GlobalMetadata::LogsLen, U256::from(1));
-//     interpreter.set_global_metadata_field(GlobalMetadata::ReceiptTrieRoot, 500.into());
+//     interpreter.set_txn_field(NormalizedTxnField::GasLimit,
+// U256::from(5000));     interpreter.set_memory_segment(Segment::TxnBloom,
+// vec![0.into(); 256]);     interpreter.set_memory_segment(Segment::Logs,
+// vec![0.into()]);     interpreter.
+// set_global_metadata_field(GlobalMetadata::LogsPayloadLen, 58.into());
+//     interpreter.set_global_metadata_field(GlobalMetadata::LogsLen,
+// U256::from(1));     interpreter.
+// set_global_metadata_field(GlobalMetadata::ReceiptTrieRoot, 500.into());
 //     interpreter.run()?;
 
 //     let segment_read = interpreter.get_memory_segment(Segment::TrieData);
 
-//     // The expected TrieData has the form [payload_len, status, cum_gas_used, bloom_filter, logs_payload_len, num_logs, [logs]]
-//     let mut expected_trie_data: Vec<U256> = vec![323.into(), success, 2000.into()];
+//     // The expected TrieData has the form [payload_len, status, cum_gas_used,
+// bloom_filter, logs_payload_len, num_logs, [logs]]     let mut
+// expected_trie_data: Vec<U256> = vec![323.into(), success, 2000.into()];
 //     expected_trie_data.extend(
 //         expected_bloom
 //             .into_iter()
@@ -111,11 +115,15 @@
 //     let log_1 = LogRlp {
 //         address: hex!("7ef66b77759e12Caf3dDB3E4AFF524E577C59D8D").into(),
 //         topics: vec![
-//             hex!("8a22ee899102a366ac8ad0495127319cb1ff2403cfae855f83a89cda1266674d").into(),
-//             hex!("0000000000000000000000000000000000000000000000000000000000000004").into(),
-//             hex!("00000000000000000000000000000000000000000000000000000000004920ea").into(),
-//         ],
-//         data: hex!("a814f7df6a2203dc0e472e8828be95957c6b329fee8e2b1bb6f044c1eb4fc243")
+//             
+// hex!("8a22ee899102a366ac8ad0495127319cb1ff2403cfae855f83a89cda1266674d").
+// into(),             
+// hex!("0000000000000000000000000000000000000000000000000000000000000004").
+// into(),             
+// hex!("00000000000000000000000000000000000000000000000000000000004920ea").
+// into(),         ],
+//         data:
+// hex!("a814f7df6a2203dc0e472e8828be95957c6b329fee8e2b1bb6f044c1eb4fc243")
 //             .to_vec()
 //             .into(),
 //     };
@@ -123,30 +131,34 @@
 //     let receipt_1 = LegacyReceiptRlp {
 //             status: true,
 //             cum_gas_used: 0x02dcb6u64.into(),
-//             bloom: hex!("00000000000000000000000000000000000000000000000000800000000000000040000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000008000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000400000000000000000000000000000002000040000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000008000000000000000000000000").to_vec().into(),
-//             logs: vec![log_1],
+//             bloom:
+// hex!("00000000000000000000000000000000000000000000000000800000000000000040000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000008000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000400000000000000000000000000000002000040000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000008000000000000000000000000"
+// ).to_vec().into(),             logs: vec![log_1],
 //         };
 //     // Get the expected RLP encoding.
 //     let expected_rlp = rlp::encode(&rlp::encode(&receipt_1));
 
-//     let initial_stack: Vec<U256> = vec![retdest, 0.into(), 0.into(), 0.into()];
-//     let mut interpreter: Interpreter<F> =
+//     let initial_stack: Vec<U256> = vec![retdest, 0.into(), 0.into(),
+// 0.into()];     let mut interpreter: Interpreter<F> =
 //         Interpreter::new_with_kernel(encode_receipt, initial_stack);
 
 //     // Write data to memory.
 //     let expected_bloom_bytes = vec![
-//         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
-//         00, 00, 0x80, 00, 00, 00, 00, 00, 00, 00, 0x40, 00, 00, 00, 00, 0x10, 00, 00, 00, 00, 00,
-//         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
-//         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 0x02, 00, 00, 00, 00, 00, 00, 00,
-//         00, 00, 00, 00, 00, 00, 00, 0x08, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
-//         00, 00, 00, 00, 00, 00, 0x01, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
-//         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
-//         00, 00, 00, 00, 00, 00, 00, 00, 00, 0x01, 00, 00, 00, 0x40, 00, 00, 00, 00, 00, 00, 00, 00,
-//         00, 00, 00, 00, 00, 00, 00, 0x20, 00, 0x04, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
-//         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 0x80, 00, 00, 00, 00, 00, 00, 00, 00, 00,
-//         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 0x08,
-//         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
+//         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
+// 00, 00, 00, 00, 00, 00,         00, 00, 0x80, 00, 00, 00, 00, 00, 00, 00,
+// 0x40, 00, 00, 00, 00, 0x10, 00, 00, 00, 00, 00,         00, 00, 00, 00, 00,
+// 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
+//         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 0x02, 00, 00,
+// 00, 00, 00, 00, 00,         00, 00, 00, 00, 00, 00, 00, 0x08, 00, 00, 00, 00,
+// 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,         00, 00, 00, 00, 00, 00, 0x01,
+// 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,         00, 00,
+// 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
+// 00, 00,         00, 00, 00, 00, 00, 00, 00, 00, 00, 0x01, 00, 00, 00, 0x40,
+// 00, 00, 00, 00, 00, 00, 00, 00,         00, 00, 00, 00, 00, 00, 00, 0x20, 00,
+// 0x04, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,         00, 00, 00, 00,
+// 00, 00, 00, 00, 00, 00, 00, 00, 0x80, 00, 00, 00, 00, 00, 00, 00, 00, 00,
+//         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
+// 00, 00, 00, 00, 0x08,         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
 //     ];
 //     let expected_bloom: Vec<U256> = expected_bloom_bytes
 //         .into_iter()
@@ -154,14 +166,14 @@
 //         .collect();
 
 //     let addr = U256::from([
-//         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x7e, 0xf6, 0x6b, 0x77, 0x75, 0x9e, 0x12, 0xca, 0xf3,
-//         0xdd, 0xb3, 0xe4, 0xaf, 0xf5, 0x24, 0xe5, 0x77, 0xc5, 0x9d, 0x8d,
-//     ]);
+//         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x7e, 0xf6, 0x6b, 0x77, 0x75,
+// 0x9e, 0x12, 0xca, 0xf3,         0xdd, 0xb3, 0xe4, 0xaf, 0xf5, 0x24, 0xe5,
+// 0x77, 0xc5, 0x9d, 0x8d,     ]);
 
 //     let topic1 = U256::from([
-//         0x8a, 0x22, 0xee, 0x89, 0x91, 0x02, 0xa3, 0x66, 0xac, 0x8a, 0xd0, 0x49, 0x51, 0x27, 0x31,
-//         0x9c, 0xb1, 0xff, 0x24, 0x03, 0xcf, 0xae, 0x85, 0x5f, 0x83, 0xa8, 0x9c, 0xda, 0x12, 0x66,
-//         0x67, 0x4d,
+//         0x8a, 0x22, 0xee, 0x89, 0x91, 0x02, 0xa3, 0x66, 0xac, 0x8a, 0xd0,
+// 0x49, 0x51, 0x27, 0x31,         0x9c, 0xb1, 0xff, 0x24, 0x03, 0xcf, 0xae,
+// 0x85, 0x5f, 0x83, 0xa8, 0x9c, 0xda, 0x12, 0x66,         0x67, 0x4d,
 //     ]);
 
 //     let topic2 = 4.into();
@@ -176,7 +188,8 @@
 //         topic3,            // topic3
 //         32.into(),         // data length
 //     ];
-//     let cur_data = hex!("a814f7df6a2203dc0e472e8828be95957c6b329fee8e2b1bb6f044c1eb4fc243")
+//     let cur_data =
+// hex!("a814f7df6a2203dc0e472e8828be95957c6b329fee8e2b1bb6f044c1eb4fc243")
 //         .iter()
 //         .copied()
 //         .map(U256::from);
@@ -193,8 +206,8 @@
 
 //     interpreter.set_memory_segment(Segment::Logs, vec![0.into()]);
 //     interpreter.set_global_metadata_field(GlobalMetadata::LogsLen, 1.into());
-//     interpreter.set_global_metadata_field(GlobalMetadata::LogsPayloadLen, 157.into());
-//     interpreter.set_memory_segment(Segment::TrieData, receipt);
+//     interpreter.set_global_metadata_field(GlobalMetadata::LogsPayloadLen,
+// 157.into());     interpreter.set_memory_segment(Segment::TrieData, receipt);
 
 //     interpreter.run()?;
 //     let rlp_pos = interpreter.pop().expect("The stack should not be empty");
@@ -218,31 +231,34 @@
 
 //     // Expected bloom
 //     let first_bloom_bytes = vec![
-//         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
-//         00, 00, 0x80, 00, 00, 00, 00, 00, 00, 00, 0x40, 00, 00, 00, 00, 0x50, 00, 00, 00, 00, 00,
-//         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
-//         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 0x02, 00, 00, 00, 00, 00, 00, 00,
-//         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
-//         00, 00, 00, 00, 00, 00, 00, 00, 00, 0x08, 00, 0x08, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
-//         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
-//         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 0x50, 00, 00, 00, 00, 00, 00, 00, 00, 00,
-//         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
-//         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 0x10,
-//         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 0x20, 00, 00, 00, 00, 00, 0x08, 00, 00,
-//         00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
-//     ];
+//         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
+// 00, 00, 00, 00, 00, 00,         00, 00, 0x80, 00, 00, 00, 00, 00, 00, 00,
+// 0x40, 00, 00, 00, 00, 0x50, 00, 00, 00, 00, 00,         00, 00, 00, 00, 00,
+// 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
+//         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 0x02, 00, 00,
+// 00, 00, 00, 00, 00,         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
+// 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,         00, 00, 00, 00, 00, 00,
+// 00, 00, 00, 0x08, 00, 0x08, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
+//         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
+// 00, 00, 00, 00, 00, 00,         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
+// 00, 0x50, 00, 00, 00, 00, 00, 00, 00, 00, 00,         00, 00, 00, 00, 00, 00,
+// 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
+//         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
+// 00, 00, 00, 00, 0x10,         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
+// 00, 0x20, 00, 00, 00, 00, 00, 0x08, 00, 00,         00, 00, 00, 00, 00, 00,
+// 00, 00, 00, 00,     ];
 
 //     let retdest = 0xDEADBEEFu32.into();
 
 //     let addr = U256::from([
-//         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x7e, 0xf6, 0x6b, 0x77, 0x75, 0x9e, 0x12, 0xca, 0xf3,
-//         0xdd, 0xb3, 0xe4, 0xaf, 0xf5, 0x24, 0xe5, 0x77, 0xc5, 0x9d, 0x8d,
-//     ]);
+//         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x7e, 0xf6, 0x6b, 0x77, 0x75,
+// 0x9e, 0x12, 0xca, 0xf3,         0xdd, 0xb3, 0xe4, 0xaf, 0xf5, 0x24, 0xe5,
+// 0x77, 0xc5, 0x9d, 0x8d,     ]);
 
 //     let topic1 = U256::from([
-//         0x8a, 0x22, 0xee, 0x89, 0x91, 0x02, 0xa3, 0x66, 0xac, 0x8a, 0xd0, 0x49, 0x51, 0x27, 0x31,
-//         0x9c, 0xb1, 0xff, 0x24, 0x03, 0xcf, 0xae, 0x85, 0x5f, 0x83, 0xa8, 0x9c, 0xda, 0x12, 0x66,
-//         0x67, 0x4d,
+//         0x8a, 0x22, 0xee, 0x89, 0x91, 0x02, 0xa3, 0x66, 0xac, 0x8a, 0xd0,
+// 0x49, 0x51, 0x27, 0x31,         0x9c, 0xb1, 0xff, 0x24, 0x03, 0xcf, 0xae,
+// 0x85, 0x5f, 0x83, 0xa8, 0x9c, 0xda, 0x12, 0x66,         0x67, 0x4d,
 //     ]);
 
 //     let topic02 = 0x2a.into();
@@ -251,9 +267,9 @@
 //     // Set logs memory and initialize TxnBloom and BlockBloom segments.
 //     let initial_stack: Vec<U256> = vec![retdest];
 
-//     let mut interpreter: Interpreter<F> = Interpreter::new_with_kernel(logs_bloom, initial_stack);
-//     let mut logs = vec![
-//         0.into(), // unused
+//     let mut interpreter: Interpreter<F> =
+// Interpreter::new_with_kernel(logs_bloom, initial_stack);     let mut logs =
+// vec![         0.into(), // unused
 //         addr,
 //         num_topics.into(), // num_topics
 //         topic1,            // topic1
@@ -261,22 +277,25 @@
 //         topic03,           // topic3
 //         32.into(),         // data_len
 //     ];
-//     let cur_data = hex!("a814f7df6a2203dc0e472e8828be95957c6b329fee8e2b1bb6f044c1eb4fc243")
+//     let cur_data =
+// hex!("a814f7df6a2203dc0e472e8828be95957c6b329fee8e2b1bb6f044c1eb4fc243")
 //         .iter()
 //         .copied()
 //         .map(U256::from);
 //     logs.extend(cur_data);
-//     // The Bloom filter initialization is required for this test to ensure we have the correct length for the filters. Otherwise, some trailing zeroes could be missing.
-//     interpreter.set_memory_segment(Segment::TxnBloom, vec![0.into(); 256]); // Initialize transaction Bloom filter.
+//     // The Bloom filter initialization is required for this test to ensure we
+// have the correct length for the filters. Otherwise, some trailing zeroes
+// could be missing.     interpreter.set_memory_segment(Segment::TxnBloom,
+// vec![0.into(); 256]); // Initialize transaction Bloom filter.
 //     interpreter.set_memory_segment(Segment::LogsData, logs);
 //     interpreter.set_memory_segment(Segment::Logs, vec![0.into()]);
-//     interpreter.set_global_metadata_field(GlobalMetadata::LogsLen, U256::from(1));
-//     interpreter.run()?;
+//     interpreter.set_global_metadata_field(GlobalMetadata::LogsLen,
+// U256::from(1));     interpreter.run()?;
 
 //     // Second transaction.
-//     let loaded_bloom_u256 = interpreter.get_memory_segment(Segment::TxnBloom);
-//     let loaded_bloom: Vec<u8> = loaded_bloom_u256
-//         .into_iter()
+//     let loaded_bloom_u256 =
+// interpreter.get_memory_segment(Segment::TxnBloom);     let loaded_bloom:
+// Vec<u8> = loaded_bloom_u256         .into_iter()
 //         .map(|elt| elt.0[0] as u8)
 //         .collect();
 
@@ -292,7 +311,8 @@
 //         topic13,           // topic3
 //         32.into(),         // data_len
 //     ];
-//     let cur_data = hex!("a814f7df6a2203dc0e472e8828be95957c6b329fee8e2b1bb6f044c1eb4fc243")
+//     let cur_data =
+// hex!("a814f7df6a2203dc0e472e8828be95957c6b329fee8e2b1bb6f044c1eb4fc243")
 //         .iter()
 //         .copied()
 //         .map(U256::from);
@@ -302,28 +322,33 @@
 //         .push(retdest)
 //         .expect("The stack should not overflow");
 //     interpreter.generation_state.registers.program_counter = logs_bloom;
-//     interpreter.set_memory_segment(Segment::TxnBloom, vec![0.into(); 256]); // Initialize transaction Bloom filter.
-//     interpreter.set_memory_segment(Segment::LogsData, logs2);
-//     interpreter.set_memory_segment(Segment::Logs, vec![0.into()]);
-//     interpreter.set_global_metadata_field(GlobalMetadata::LogsLen, U256::from(1));
+//     interpreter.set_memory_segment(Segment::TxnBloom, vec![0.into(); 256]);
+// // Initialize transaction Bloom filter.     interpreter.
+// set_memory_segment(Segment::LogsData, logs2);     interpreter.
+// set_memory_segment(Segment::Logs, vec![0.into()]);     interpreter.
+// set_global_metadata_field(GlobalMetadata::LogsLen, U256::from(1));
 //     interpreter.run()?;
 
 //     let second_bloom_bytes = vec![
-//         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
-//         00, 00, 0x80, 00, 00, 00, 00, 00, 00, 00, 0x40, 00, 00, 00, 00, 0x10, 00, 00, 00, 00, 00,
-//         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
-//         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 0x02, 00, 00, 00, 00, 00, 00, 00,
-//         00, 00, 00, 00, 00, 00, 00, 0x08, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
-//         00, 00, 00, 00, 00, 00, 0x01, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
-//         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
-//         00, 00, 00, 00, 00, 00, 00, 00, 00, 0x01, 00, 00, 00, 0x40, 00, 00, 00, 00, 00, 00, 00, 00,
-//         00, 00, 00, 00, 00, 00, 00, 0x20, 00, 0x04, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
-//         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 0x80, 00, 00, 00, 00, 00, 00, 00, 00, 00,
-//         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 0x08,
-//         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
+//         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
+// 00, 00, 00, 00, 00, 00,         00, 00, 0x80, 00, 00, 00, 00, 00, 00, 00,
+// 0x40, 00, 00, 00, 00, 0x10, 00, 00, 00, 00, 00,         00, 00, 00, 00, 00,
+// 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
+//         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 0x02, 00, 00,
+// 00, 00, 00, 00, 00,         00, 00, 00, 00, 00, 00, 00, 0x08, 00, 00, 00, 00,
+// 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,         00, 00, 00, 00, 00, 00, 0x01,
+// 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,         00, 00,
+// 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
+// 00, 00,         00, 00, 00, 00, 00, 00, 00, 00, 00, 0x01, 00, 00, 00, 0x40,
+// 00, 00, 00, 00, 00, 00, 00, 00,         00, 00, 00, 00, 00, 00, 00, 0x20, 00,
+// 0x04, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,         00, 00, 00, 00,
+// 00, 00, 00, 00, 00, 00, 00, 00, 0x80, 00, 00, 00, 00, 00, 00, 00, 00, 00,
+//         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
+// 00, 00, 00, 00, 0x08,         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
 //     ];
 
-//     let second_loaded_bloom_u256 = interpreter.get_memory_segment(Segment::TxnBloom);
+//     let second_loaded_bloom_u256 =
+// interpreter.get_memory_segment(Segment::TxnBloom);
 //     let second_loaded_bloom: Vec<u8> = second_loaded_bloom_u256
 //         .into_iter()
 //         .map(|elt| elt.0[0] as u8)
@@ -336,11 +361,11 @@
 
 // #[test]
 // fn test_mpt_insert_receipt() -> Result<()> {
-//     // This test simulates a receipt processing to test `mpt_insert_receipt_trie`.
-//     // For this, we need to set the data correctly in memory.
-//     // In TrieData, we need to insert a receipt of the form:
-//     // `[payload_len, status, cum_gas_used, bloom, logs_payload_len, num_logs, [logs]]`.
-//     // We also need to set TrieDataSize correctly.
+//     // This test simulates a receipt processing to test
+// `mpt_insert_receipt_trie`.     // For this, we need to set the data correctly
+// in memory.     // In TrieData, we need to insert a receipt of the form:
+//     // `[payload_len, status, cum_gas_used, bloom, logs_payload_len,
+// num_logs, [logs]]`.     // We also need to set TrieDataSize correctly.
 
 //     let retdest = 0xDEADBEEFu32.into();
 //     let trie_inputs = Default::default();
@@ -355,19 +380,22 @@
 //     let status_0 = 1;
 //     let cum_gas_used_0 = 0x016e5b;
 //     let logs_bloom_0_bytes = vec![
-//         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
-//         00, 00, 0x80, 00, 00, 00, 00, 00, 00, 00, 0x40, 00, 00, 00, 00, 0x50, 00, 00, 00, 00, 00,
-//         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
-//         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 0x02, 00, 00, 00, 00, 00, 00, 00,
-//         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
-//         00, 00, 00, 00, 00, 00, 00, 00, 00, 0x08, 00, 0x08, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
-//         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
-//         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 0x50, 00, 00, 00, 00, 00, 00, 00, 00, 00,
-//         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
-//         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 0x10,
-//         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 0x20, 00, 00, 00, 00, 00, 0x08, 00, 00,
-//         00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
-//     ];
+//         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
+// 00, 00, 00, 00, 00, 00,         00, 00, 0x80, 00, 00, 00, 00, 00, 00, 00,
+// 0x40, 00, 00, 00, 00, 0x50, 00, 00, 00, 00, 00,         00, 00, 00, 00, 00,
+// 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
+//         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 0x02, 00, 00,
+// 00, 00, 00, 00, 00,         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
+// 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,         00, 00, 00, 00, 00, 00,
+// 00, 00, 00, 0x08, 00, 0x08, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
+//         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
+// 00, 00, 00, 00, 00, 00,         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
+// 00, 0x50, 00, 00, 00, 00, 00, 00, 00, 00, 00,         00, 00, 00, 00, 00, 00,
+// 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
+//         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
+// 00, 00, 00, 00, 0x10,         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
+// 00, 0x20, 00, 00, 00, 00, 00, 0x08, 00, 00,         00, 00, 00, 00, 00, 00,
+// 00, 00, 00, 00,     ];
 
 //     // Logs_0:
 //     let logs_bloom_0: Vec<U256> = logs_bloom_0_bytes
@@ -376,15 +404,15 @@
 //         .collect();
 
 //     let addr = U256::from([
-//         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x7e, 0xf6, 0x6b, 0x77, 0x75, 0x9e, 0x12, 0xca, 0xf3,
-//         0xdd, 0xb3, 0xe4, 0xaf, 0xf5, 0x24, 0xe5, 0x77, 0xc5, 0x9d, 0x8d,
-//     ]);
+//         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x7e, 0xf6, 0x6b, 0x77, 0x75,
+// 0x9e, 0x12, 0xca, 0xf3,         0xdd, 0xb3, 0xe4, 0xaf, 0xf5, 0x24, 0xe5,
+// 0x77, 0xc5, 0x9d, 0x8d,     ]);
 
 //     // The first topic is shared by the two transactions.
 //     let topic1 = U256::from([
-//         0x8a, 0x22, 0xee, 0x89, 0x91, 0x02, 0xa3, 0x66, 0xac, 0x8a, 0xd0, 0x49, 0x51, 0x27, 0x31,
-//         0x9c, 0xb1, 0xff, 0x24, 0x03, 0xcf, 0xae, 0x85, 0x5f, 0x83, 0xa8, 0x9c, 0xda, 0x12, 0x66,
-//         0x67, 0x4d,
+//         0x8a, 0x22, 0xee, 0x89, 0x91, 0x02, 0xa3, 0x66, 0xac, 0x8a, 0xd0,
+// 0x49, 0x51, 0x27, 0x31,         0x9c, 0xb1, 0xff, 0x24, 0x03, 0xcf, 0xae,
+// 0x85, 0x5f, 0x83, 0xa8, 0x9c, 0xda, 0x12, 0x66,         0x67, 0x4d,
 //     ]);
 
 //     let topic02 = 0x2a.into();
@@ -399,25 +427,26 @@
 //         topic03,           // topic3
 //         32.into(),         // data_len
 //     ];
-//     let cur_data = hex!("f7af1cc94b1aef2e0fa15f1b4baefa86eb60e78fa4bd082372a0a446d197fb58")
+//     let cur_data =
+// hex!("f7af1cc94b1aef2e0fa15f1b4baefa86eb60e78fa4bd082372a0a446d197fb58")
 //         .iter()
 //         .copied()
 //         .map(U256::from);
 //     logs_0.extend(cur_data);
 
-//     let mut receipt: Vec<U256> = vec![423.into(), status_0.into(), cum_gas_used_0.into()];
-//     receipt.extend(logs_bloom_0);
+//     let mut receipt: Vec<U256> = vec![423.into(), status_0.into(),
+// cum_gas_used_0.into()];     receipt.extend(logs_bloom_0);
 //     receipt.push(logs_payload_len.into()); // logs_payload_len
 //     receipt.push(num_logs.into()); // num_logs
 //     receipt.extend(logs_0.clone());
 
-//     let mut interpreter: Interpreter<F> = Interpreter::new_with_kernel(0, vec![]);
-//     initialize_mpts(&mut interpreter, &trie_inputs);
+//     let mut interpreter: Interpreter<F> = Interpreter::new_with_kernel(0,
+// vec![]);     initialize_mpts(&mut interpreter, &trie_inputs);
 
-//     // If TrieData is empty, we need to push 0 because the first value is always 0.
-//     let mut cur_trie_data = interpreter.get_memory_segment(Segment::TrieData);
-//     if cur_trie_data.is_empty() {
-//         cur_trie_data.push(0.into());
+//     // If TrieData is empty, we need to push 0 because the first value is
+// always 0.     let mut cur_trie_data =
+// interpreter.get_memory_segment(Segment::TrieData);     if cur_trie_data.
+// is_empty() {         cur_trie_data.push(0.into());
 //     }
 
 //     // stack: transaction_nb, value_ptr, retdest
@@ -439,26 +468,29 @@
 //     // Set memory.
 //     cur_trie_data.extend(receipt);
 //     interpreter.set_memory_segment(Segment::TrieData, cur_trie_data.clone());
-//     interpreter.set_global_metadata_field(GlobalMetadata::TrieDataSize, cur_trie_data.len().into());
-//     // First insertion.
+//     interpreter.set_global_metadata_field(GlobalMetadata::TrieDataSize,
+// cur_trie_data.len().into());     // First insertion.
 //     interpreter.run()?;
 
 //     // receipt_1:
 //     let status_1 = 1;
 //     let cum_gas_used_1 = 0x02dcb6;
 //     let logs_bloom_1_bytes = vec![
-//         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
-//         00, 00, 0x80, 00, 00, 00, 00, 00, 00, 00, 0x40, 00, 00, 00, 00, 0x10, 00, 00, 00, 00, 00,
-//         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
-//         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 0x02, 00, 00, 00, 00, 00, 00, 00,
-//         00, 00, 00, 00, 00, 00, 00, 0x08, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
-//         00, 00, 00, 00, 00, 00, 0x01, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
-//         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
-//         00, 00, 00, 00, 00, 00, 00, 00, 00, 0x01, 00, 00, 00, 0x40, 00, 00, 00, 00, 00, 00, 00, 00,
-//         00, 00, 00, 00, 00, 00, 00, 0x20, 00, 0x04, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
-//         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 0x80, 00, 00, 00, 00, 00, 00, 00, 00, 00,
-//         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 0x08,
-//         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
+//         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
+// 00, 00, 00, 00, 00, 00,         00, 00, 0x80, 00, 00, 00, 00, 00, 00, 00,
+// 0x40, 00, 00, 00, 00, 0x10, 00, 00, 00, 00, 00,         00, 00, 00, 00, 00,
+// 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
+//         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 0x02, 00, 00,
+// 00, 00, 00, 00, 00,         00, 00, 00, 00, 00, 00, 00, 0x08, 00, 00, 00, 00,
+// 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,         00, 00, 00, 00, 00, 00, 0x01,
+// 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,         00, 00,
+// 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
+// 00, 00,         00, 00, 00, 00, 00, 00, 00, 00, 00, 0x01, 00, 00, 00, 0x40,
+// 00, 00, 00, 00, 00, 00, 00, 00,         00, 00, 00, 00, 00, 00, 00, 0x20, 00,
+// 0x04, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,         00, 00, 00, 00,
+// 00, 00, 00, 00, 00, 00, 00, 00, 0x80, 00, 00, 00, 00, 00, 00, 00, 00, 00,
+//         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
+// 00, 00, 00, 00, 0x08,         00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
 //     ];
 
 //     // Logs_1:
@@ -479,14 +511,15 @@
 //         topic13,           // topic3
 //         32.into(),         // data length
 //     ];
-//     let cur_data = hex!("a814f7df6a2203dc0e472e8828be95957c6b329fee8e2b1bb6f044c1eb4fc243")
+//     let cur_data =
+// hex!("a814f7df6a2203dc0e472e8828be95957c6b329fee8e2b1bb6f044c1eb4fc243")
 //         .iter()
 //         .copied()
 //         .map(U256::from);
 //     logs_1.extend(cur_data);
 
-//     let mut receipt_1: Vec<U256> = vec![payload_len.into(), status_1.into(), cum_gas_used_1.into()];
-//     receipt_1.extend(logs_bloom_1);
+//     let mut receipt_1: Vec<U256> = vec![payload_len.into(), status_1.into(),
+// cum_gas_used_1.into()];     receipt_1.extend(logs_bloom_1);
 //     receipt_1.push(logs_payload_len.into()); // logs payload len
 //     receipt_1.push(num_logs.into()); // nb logs
 //     receipt_1.extend(logs_1.clone());
@@ -510,24 +543,24 @@
 //     // Set memory.
 //     interpreter.generation_state.registers.program_counter = mpt_insert;
 //     interpreter.set_memory_segment(Segment::TrieData, cur_trie_data.clone());
-//     interpreter.set_global_metadata_field(GlobalMetadata::TrieDataSize, cur_trie_data.len().into());
-//     interpreter.run()?;
+//     interpreter.set_global_metadata_field(GlobalMetadata::TrieDataSize,
+// cur_trie_data.len().into());     interpreter.run()?;
 
 //     // Finally, check that the hashes correspond.
 //     let mpt_hash_receipt = KERNEL.global_labels["mpt_hash_receipt_trie"];
-//     interpreter.generation_state.registers.program_counter = mpt_hash_receipt;
-//     interpreter
+//     interpreter.generation_state.registers.program_counter =
+// mpt_hash_receipt;     interpreter
 //         .push(retdest)
 //         .expect("The stack should not overflow");
 //     interpreter
-//         .push(1.into()) // Initial length of the trie data segment, unused.; // Initial length of the trie data segment, unused.
-//         .expect("The stack should not overflow");
-//     interpreter.run()?;
+//         .push(1.into()) // Initial length of the trie data segment, unused.;
+// // Initial length of the trie data segment, unused.         .expect("The
+// stack should not overflow");     interpreter.run()?;
 //     assert_eq!(
 //         interpreter.stack()[1],
 //         U256::from(hex!(
-//             "da46cdd329bfedace32da95f2b344d314bc6f55f027d65f9f4ac04ee425e1f98"
-//         ))
+//             
+// "da46cdd329bfedace32da95f2b344d314bc6f55f027d65f9f4ac04ee425e1f98"         ))
 //     );
 //     Ok(())
 // }
@@ -538,9 +571,9 @@
 
 //     // address
 //     let to = [
-//         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x09, 0x5e, 0x7b, 0xae, 0xa6, 0xa6, 0xc7, 0xc4, 0xc2,
-//         0xdf, 0xeb, 0x97, 0x7e, 0xfa, 0xc3, 0x26, 0xaf, 0x55, 0x2d, 0x87,
-//     ];
+//         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x09, 0x5e, 0x7b, 0xae, 0xa6,
+// 0xa6, 0xc7, 0xc4, 0xc2,         0xdf, 0xeb, 0x97, 0x7e, 0xfa, 0xc3, 0x26,
+// 0xaf, 0x55, 0x2d, 0x87,     ];
 
 //     let retdest = 0xDEADBEEFu32.into();
 //     let logs_bloom = KERNEL.global_labels["logs_bloom"];
@@ -560,16 +593,18 @@
 //         0x63.into(),
 //         5.into(),
 //         [
-//             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xa1,
-//             0xb2, 0xc3, 0xd4, 0xe5,
+//             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+// 0, 0, 0, 0, 0, 0xa1,             0xb2, 0xc3, 0xd4, 0xe5,
 //         ]
 //         .into(),
 //     ];
-//     let mut interpreter: Interpreter<F> = Interpreter::new_with_kernel(logs_bloom, initial_stack);
-//     interpreter.set_memory_segment(Segment::TxnBloom, vec![0.into(); 256]); // Initialize transaction Bloom filter.
-//     interpreter.set_memory_segment(Segment::LogsData, logs);
-//     interpreter.set_memory_segment(Segment::Logs, vec![0.into(), 4.into()]);
-//     interpreter.set_global_metadata_field(GlobalMetadata::LogsLen, U256::from(2));
+//     let mut interpreter: Interpreter<F> =
+// Interpreter::new_with_kernel(logs_bloom, initial_stack);     interpreter.
+// set_memory_segment(Segment::TxnBloom, vec![0.into(); 256]); // Initialize
+// transaction Bloom filter.     interpreter.
+// set_memory_segment(Segment::LogsData, logs);     interpreter.
+// set_memory_segment(Segment::Logs, vec![0.into(), 4.into()]);     interpreter.
+// set_global_metadata_field(GlobalMetadata::LogsLen, U256::from(2));
 //     interpreter.run()?;
 
 //     let loaded_bloom_bytes: Vec<u8> = interpreter
@@ -578,14 +613,16 @@
 //         .map(|elt| elt.0[0] as u8)
 //         .collect();
 
-//     let expected = hex!("00000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000000000000000000000004000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000000000000000400000000000040000000000000000000000000002000000000000000000000000000").to_vec();
+//     let expected =
+// hex!("00000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000000000000000000000004000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000000000000000400000000000040000000000000000000000000002000000000000000000000000000"
+// ).to_vec();
 
 //     assert_eq!(expected, loaded_bloom_bytes);
 //     Ok(())
 // }
 
-// fn logs_bloom_bytes_fn(logs_list: Vec<(Vec<u8>, Vec<Vec<u8>>)>) -> [u8; 256] {
-//     // The first element of logs_list.
+// fn logs_bloom_bytes_fn(logs_list: Vec<(Vec<u8>, Vec<Vec<u8>>)>) -> [u8; 256]
+// {     // The first element of logs_list.
 //     let mut bloom = [0_u8; 256];
 
 //     for log in logs_list {
@@ -604,9 +641,9 @@
 //     let bloom_hash = keccak(bloom_entry).to_fixed_bytes();
 
 //     for idx in 0..3 {
-//         let bit_pair = u16::from_be_bytes(bloom_hash[2 * idx..2 * (idx + 1)].try_into().unwrap());
-//         let bit_to_set = 0x07FF - (bit_pair & 0x07FF);
-//         let byte_index = bit_to_set / 8;
+//         let bit_pair = u16::from_be_bytes(bloom_hash[2 * idx..2 * (idx +
+// 1)].try_into().unwrap());         let bit_to_set = 0x07FF - (bit_pair &
+// 0x07FF);         let byte_index = bit_to_set / 8;
 //         let bit_value = 1 << (7 - bit_to_set % 8);
 //         bloom[byte_index as usize] |= bit_value;
 //     }

@@ -41,7 +41,8 @@ pub struct AllStark<F: RichField + Extendable<D>, const D: usize> {
 }
 
 impl<F: RichField + Extendable<D>, const D: usize> Default for AllStark<F, D> {
-    /// Returns an `AllStark` containing all the STARKs initialized with default values.
+    /// Returns an `AllStark` containing all the STARKs initialized with default
+    /// values.
     fn default() -> Self {
         Self {
             arithmetic_stark: ArithmeticStark::default(),
@@ -130,7 +131,8 @@ pub(crate) fn all_cross_table_lookups<F: Field>() -> Vec<CrossTableLookup<F>> {
     ]
 }
 
-/// `CrossTableLookup` for `ArithmeticStark`, to connect it with the `Cpu` module.
+/// `CrossTableLookup` for `ArithmeticStark`, to connect it with the `Cpu`
+/// module.
 fn ctl_arithmetic<F: Field>() -> CrossTableLookup<F> {
     CrossTableLookup::new(
         vec![cpu_stark::ctl_arithmetic_base_rows()],
@@ -138,7 +140,8 @@ fn ctl_arithmetic<F: Field>() -> CrossTableLookup<F> {
     )
 }
 
-/// `CrossTableLookup` for `BytePackingStark`, to connect it with the `Cpu` module.
+/// `CrossTableLookup` for `BytePackingStark`, to connect it with the `Cpu`
+/// module.
 fn ctl_byte_packing<F: Field>() -> CrossTableLookup<F> {
     let cpu_packing_looking = TableWithColumns::new(
         *Table::Cpu,
@@ -176,9 +179,10 @@ fn ctl_byte_packing<F: Field>() -> CrossTableLookup<F> {
     )
 }
 
-/// `CrossTableLookup` for `KeccakStark` inputs, to connect it with the `KeccakSponge` module.
-/// `KeccakStarkSponge` looks into `KeccakStark` to give the inputs of the sponge.
-/// Its consistency with the 'output' CTL is ensured through a timestamp column on the `KeccakStark` side.
+/// `CrossTableLookup` for `KeccakStark` inputs, to connect it with the
+/// `KeccakSponge` module. `KeccakStarkSponge` looks into `KeccakStark` to give
+/// the inputs of the sponge. Its consistency with the 'output' CTL is ensured
+/// through a timestamp column on the `KeccakStark` side.
 fn ctl_keccak_inputs<F: Field>() -> CrossTableLookup<F> {
     let keccak_sponge_looking = TableWithColumns::new(
         *Table::KeccakSponge,
@@ -193,8 +197,9 @@ fn ctl_keccak_inputs<F: Field>() -> CrossTableLookup<F> {
     CrossTableLookup::new(vec![keccak_sponge_looking], keccak_looked)
 }
 
-/// `CrossTableLookup` for `KeccakStark` outputs, to connect it with the `KeccakSponge` module.
-/// `KeccakStarkSponge` looks into `KeccakStark` to give the outputs of the sponge.
+/// `CrossTableLookup` for `KeccakStark` outputs, to connect it with the
+/// `KeccakSponge` module. `KeccakStarkSponge` looks into `KeccakStark` to give
+/// the outputs of the sponge.
 fn ctl_keccak_outputs<F: Field>() -> CrossTableLookup<F> {
     let keccak_sponge_looking = TableWithColumns::new(
         *Table::KeccakSponge,
@@ -209,7 +214,8 @@ fn ctl_keccak_outputs<F: Field>() -> CrossTableLookup<F> {
     CrossTableLookup::new(vec![keccak_sponge_looking], keccak_looked)
 }
 
-/// `CrossTableLookup` for `KeccakSpongeStark` to connect it with the `Cpu` module.
+/// `CrossTableLookup` for `KeccakSpongeStark` to connect it with the `Cpu`
+/// module.
 fn ctl_keccak_sponge<F: Field>() -> CrossTableLookup<F> {
     let cpu_looking = TableWithColumns::new(
         *Table::Cpu,
@@ -224,7 +230,8 @@ fn ctl_keccak_sponge<F: Field>() -> CrossTableLookup<F> {
     CrossTableLookup::new(vec![cpu_looking], keccak_sponge_looked)
 }
 
-/// `CrossTableLookup` for `LogicStark` to connect it with the `Cpu` and `KeccakSponge` modules.
+/// `CrossTableLookup` for `LogicStark` to connect it with the `Cpu` and
+/// `KeccakSponge` modules.
 fn ctl_logic<F: Field>() -> CrossTableLookup<F> {
     let cpu_looking = TableWithColumns::new(
         *Table::Cpu,
@@ -245,7 +252,8 @@ fn ctl_logic<F: Field>() -> CrossTableLookup<F> {
     CrossTableLookup::new(all_lookers, logic_looked)
 }
 
-/// `CrossTableLookup` for `MemoryStark` to connect it with all the modules which need memory accesses.
+/// `CrossTableLookup` for `MemoryStark` to connect it with all the modules
+/// which need memory accesses.
 fn ctl_memory<F: Field>() -> CrossTableLookup<F> {
     let cpu_memory_code_read = TableWithColumns::new(
         *Table::Cpu,

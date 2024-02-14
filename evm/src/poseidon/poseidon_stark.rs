@@ -50,8 +50,9 @@ pub struct PoseidonStark<F, const D: usize> {
 
 /// Information about a Poseidon operation needed for witness generation.
 impl<F: RichField + Extendable<D>, const D: usize> PoseidonStark<F, D> {
-    /// Generate the rows of the trace. Note that this does not generate the permuted columns used
-    /// in our lookup arguments, as those are computed after transposing to column-wise form.
+    /// Generate the rows of the trace. Note that this does not generate the
+    /// permuted columns used in our lookup arguments, as those are computed
+    /// after transposing to column-wise form.
     fn generate_trace_rows(
         &self,
         operations: Vec<PoseidonOp<F>>,

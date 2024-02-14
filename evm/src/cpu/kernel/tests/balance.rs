@@ -31,10 +31,11 @@
 //     address: Address,
 //     account: &AccountRlp,
 // ) -> Result<()> {
-//     let mpt_insert_state_trie = KERNEL.global_labels["mpt_insert_state_trie"];
-//     let mpt_hash_state_trie = KERNEL.global_labels["mpt_hash_state_trie"];
-//     let mut state_trie: HashedPartialTrie = Default::default();
-//     let trie_inputs = Default::default();
+//     let mpt_insert_state_trie =
+// KERNEL.global_labels["mpt_insert_state_trie"];     let mpt_hash_state_trie =
+// KERNEL.global_labels["mpt_hash_state_trie"];     let mut state_trie:
+// HashedPartialTrie = Default::default();     let trie_inputs =
+// Default::default();
 
 //     initialize_mpts(interpreter, &trie_inputs);
 //     assert_eq!(interpreter.stack(), vec![]);
@@ -43,24 +44,24 @@
 //         keccak(address.to_fixed_bytes()).as_bytes(),
 //     ));
 //     // Next, execute mpt_insert_state_trie.
-//     interpreter.generation_state.registers.program_counter = mpt_insert_state_trie;
-//     let trie_data = interpreter.get_trie_data_mut();
+//     interpreter.generation_state.registers.program_counter =
+// mpt_insert_state_trie;     let trie_data = interpreter.get_trie_data_mut();
 //     if trie_data.is_empty() {
-//         // In the assembly we skip over 0, knowing trie_data[0] = 0 by default.
-//         // Since we don't explicitly set it to 0, we need to do so here.
-//         trie_data.push(0.into());
+//         // In the assembly we skip over 0, knowing trie_data[0] = 0 by
+// default.         // Since we don't explicitly set it to 0, we need to do so
+// here.         trie_data.push(0.into());
 //     }
 //     let value_ptr = trie_data.len();
 //     trie_data.push(account.nonce);
 //     trie_data.push(account.balance);
-//     // In memory, storage_root gets interpreted as a pointer to a storage trie,
-//     // so we have to ensure the pointer is valid. It's easiest to set it to 0,
-//     // which works as an empty node, since trie_data[0] = 0 = MPT_TYPE_EMPTY.
-//     trie_data.push(H256::zero().into_uint());
+//     // In memory, storage_root gets interpreted as a pointer to a storage
+// trie,     // so we have to ensure the pointer is valid. It's easiest to set
+// it to 0,     // which works as an empty node, since trie_data[0] = 0 =
+// MPT_TYPE_EMPTY.     trie_data.push(H256::zero().into_uint());
 //     trie_data.push(account.code_hash.into_uint());
 //     let trie_data_len = trie_data.len().into();
-//     interpreter.set_global_metadata_field(GlobalMetadata::TrieDataSize, trie_data_len);
-//     interpreter
+//     interpreter.set_global_metadata_field(GlobalMetadata::TrieDataSize,
+// trie_data_len);     interpreter
 //         .push(0xDEADBEEFu32.into())
 //         .expect("The stack should not overflow");
 //     interpreter
@@ -79,8 +80,8 @@
 //     );
 
 //     // Now, execute mpt_hash_state_trie.
-//     interpreter.generation_state.registers.program_counter = mpt_hash_state_trie;
-//     interpreter
+//     interpreter.generation_state.registers.program_counter =
+// mpt_hash_state_trie;     interpreter
 //         .push(0xDEADBEEFu32.into())
 //         .expect("The stack should not overflow");
 //     interpreter
@@ -109,16 +110,16 @@
 //     let balance = U256(rng.gen());
 //     let account = test_account(balance);
 
-//     let mut interpreter: Interpreter<F> = Interpreter::new_with_kernel(0, vec![]);
-//     let address: Address = rng.gen();
+//     let mut interpreter: Interpreter<F> = Interpreter::new_with_kernel(0,
+// vec![]);     let address: Address = rng.gen();
 //     // Prepare the interpreter by inserting the account in the state trie.
 //     prepare_interpreter(&mut interpreter, address, &account)?;
 
 //     // Test `balance`
-//     interpreter.generation_state.registers.program_counter = KERNEL.global_labels["balance"];
-//     interpreter.pop().expect("The stack should not be empty");
-//     interpreter.pop().expect("The stack should not be empty");
-//     assert!(interpreter.stack().is_empty());
+//     interpreter.generation_state.registers.program_counter =
+// KERNEL.global_labels["balance"];     interpreter.pop().expect("The stack
+// should not be empty");     interpreter.pop().expect("The stack should not be
+// empty");     assert!(interpreter.stack().is_empty());
 //     interpreter
 //         .push(0xDEADBEEFu32.into())
 //         .expect("The stack should not overflow");
