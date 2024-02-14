@@ -12,6 +12,12 @@ use plonky2::hash::poseidon::Poseidon;
 use plonky2::iop::ext_target::ExtensionTarget;
 use plonky2::timed;
 use plonky2::util::timing::TimingTree;
+use starky::constraint_consumer::{ConstraintConsumer, RecursiveConstraintConsumer};
+use starky::cross_table_lookup::TableWithColumns;
+use starky::evaluation_frame::{StarkEvaluationFrame, StarkFrame};
+use starky::lookup::{Column, Filter};
+use starky::stark::Stark;
+use starky::util::trace_rows_to_poly_values;
 
 use super::columns::{
     reg_cubed_full, reg_cubed_partial, reg_full_sbox_0, reg_full_sbox_1, reg_input_capacity,
@@ -19,13 +25,7 @@ use super::columns::{
     N_PARTIAL_ROUNDS, POSEIDON_COL_MAP, POSEIDON_DIGEST, POSEIDON_SPONGE_RATE,
     POSEIDON_SPONGE_WIDTH,
 };
-use crate::all_stark::Table;
-use crate::constraint_consumer::{ConstraintConsumer, RecursiveConstraintConsumer};
-use crate::cross_table_lookup::TableWithColumns;
-use crate::evaluation_frame::{StarkEvaluationFrame, StarkFrame};
-use crate::lookup::{Column, Filter};
-use crate::stark::Stark;
-use crate::util::trace_rows_to_poly_values;
+use crate::all_stark::{EvmStarkFrame, Table};
 use crate::witness::memory::MemoryAddress;
 
 pub(crate) fn ctl_looked<F: Field>() -> TableWithColumns<F> {
@@ -186,12 +186,12 @@ impl<F: RichField + Extendable<D>, const D: usize> PoseidonStark<F, D> {
 }
 
 impl<F: RichField + Extendable<D>, const D: usize> Stark<F, D> for PoseidonStark<F, D> {
-    type EvaluationFrame<FE, P, const D2: usize> = StarkFrame<P, NUM_COLUMNS>
+    type EvaluationFrame<FE, P, const D2: usize> = EvmStarkFrame<P, FE, NUM_COLUMNS>
         where
             FE: FieldExtension<D2, BaseField = F>,
             P: PackedField<Scalar = FE>;
 
-    type EvaluationFrameTarget = StarkFrame<ExtensionTarget<D>, NUM_COLUMNS>;
+    type EvaluationFrameTarget = EvmStarkFrame<ExtensionTarget<D>, ExtensionTarget<D>, NUM_COLUMNS>;
 
     fn eval_packed_generic<FE, P, const D2: usize>(
         &self,
@@ -482,21 +482,18 @@ mod tests {
     use plonky2::plonk::config::{GenericConfig, PoseidonGoldilocksConfig};
     use plonky2::timed;
     use plonky2::util::timing::TimingTree;
+    use starky::cross_table_lookup::{CtlData, CtlZData};
+    use starky::lookup::{GrandProductChallenge, GrandProductChallengeSet};
+    use starky::stark_testing::{test_stark_circuit_constraints, test_stark_low_degree};
 
-    use crate::config::StarkConfig;
-    use crate::cross_table_lookup::{CtlData, CtlZData, GrandProductChallengeSet};
-    use crate::lookup::GrandProductChallenge;
-    // use crate::cross_table_lookup::{
-    //     CtlData, CtlZData, GrandProductChallenge, GrandProductChallengeSet,
-    // };
     use crate::memory::segments::Segment;
     use crate::poseidon::columns::{
         PoseidonColumnsView, POSEIDON_DIGEST, POSEIDON_SPONGE_RATE, POSEIDON_SPONGE_WIDTH,
     };
     use crate::poseidon::poseidon_stark::{PoseidonOp, PoseidonStark};
     use crate::prover::prove_single_table;
-    use crate::stark_testing::{test_stark_circuit_constraints, test_stark_low_degree};
     use crate::witness::memory::MemoryAddress;
+    use crate::StarkConfig;
 
     #[test]
     fn test_stark_degree() -> Result<()> {

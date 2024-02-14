@@ -9,18 +9,18 @@ use plonky2::hash::hash_types::RichField;
 use plonky2::iop::ext_target::ExtensionTarget;
 use plonky2::plonk::circuit_builder::CircuitBuilder;
 use plonky2::util::transpose;
+use starky::constraint_consumer::{ConstraintConsumer, RecursiveConstraintConsumer};
+use starky::cross_table_lookup::TableWithColumns;
+use starky::evaluation_frame::StarkEvaluationFrame;
+use starky::lookup::{Column, Filter, Lookup};
+use starky::stark::Stark;
 use static_assertions::const_assert;
 
 use super::columns::{op_flags, NUM_ARITH_COLUMNS};
 use super::shift;
-use crate::all_stark::Table;
+use crate::all_stark::{EvmStarkFrame, Table};
 use crate::arithmetic::columns::{NUM_SHARED_COLS, RANGE_COUNTER, RC_FREQUENCIES, SHARED_COLS};
 use crate::arithmetic::{addcy, byte, columns, divmod, modular, mul, Operation};
-use crate::constraint_consumer::{ConstraintConsumer, RecursiveConstraintConsumer};
-use crate::cross_table_lookup::TableWithColumns;
-use crate::evaluation_frame::{StarkEvaluationFrame, StarkFrame};
-use crate::lookup::{Column, Filter, Lookup};
-use crate::stark::Stark;
 
 /// Creates a vector of `Columns` to link the 16-bit columns of the arithmetic table,
 /// split into groups of N_LIMBS at a time in `regs`, with the corresponding 32-bit
@@ -190,12 +190,13 @@ impl<F: RichField, const D: usize> ArithmeticStark<F, D> {
 }
 
 impl<F: RichField + Extendable<D>, const D: usize> Stark<F, D> for ArithmeticStark<F, D> {
-    type EvaluationFrame<FE, P, const D2: usize> = StarkFrame<P, NUM_ARITH_COLUMNS>
+    type EvaluationFrame<FE, P, const D2: usize> = EvmStarkFrame<P, FE, NUM_ARITH_COLUMNS>
     where
         FE: FieldExtension<D2, BaseField = F>,
         P: PackedField<Scalar = FE>;
 
-    type EvaluationFrameTarget = StarkFrame<ExtensionTarget<D>, NUM_ARITH_COLUMNS>;
+    type EvaluationFrameTarget =
+        EvmStarkFrame<ExtensionTarget<D>, ExtensionTarget<D>, NUM_ARITH_COLUMNS>;
 
     fn eval_packed_generic<FE, P, const D2: usize>(
         &self,
@@ -213,6 +214,10 @@ impl<F: RichField + Extendable<D>, const D: usize> Stark<F, D> for ArithmeticSta
             let flag = lv[flag_idx];
             yield_constr.constraint(flag * (flag - P::ONES));
         }
+
+        // Only a single flag must be activated at once.
+        let all_flags = op_flags().map(|i| lv[i]).sum::<P>();
+        yield_constr.constraint(all_flags * (all_flags - P::ONES));
 
         // Check that `OPCODE_COL` holds 0 if the operation is not a range_check.
         let opcode_constraint = (P::ONES - lv[columns::IS_RANGE_CHECK]) * lv[columns::OPCODE_COL];
@@ -260,6 +265,11 @@ impl<F: RichField + Extendable<D>, const D: usize> Stark<F, D> for ArithmeticSta
             let constraint = builder.mul_sub_extension(flag, flag, flag);
             yield_constr.constraint(builder, constraint);
         }
+
+        // Only a single flag must be activated at once.
+        let all_flags = builder.add_many_extension(op_flags().map(|i| lv[i]));
+        let constraint = builder.mul_sub_extension(all_flags, all_flags, all_flags);
+        yield_constr.constraint(builder, constraint);
 
         // Check that `OPCODE_COL` holds 0 if the operation is not a range_check.
         let opcode_constraint = builder.arithmetic_extension(
@@ -311,6 +321,10 @@ impl<F: RichField + Extendable<D>, const D: usize> Stark<F, D> for ArithmeticSta
             filter_columns: vec![None; NUM_SHARED_COLS],
         }]
     }
+
+    fn requires_ctls(&self) -> bool {
+        true
+    }
 }
 
 #[cfg(test)]
@@ -321,11 +335,11 @@ mod tests {
     use plonky2::plonk::config::{GenericConfig, PoseidonGoldilocksConfig};
     use rand::{Rng, SeedableRng};
     use rand_chacha::ChaCha8Rng;
+    use starky::stark_testing::{test_stark_circuit_constraints, test_stark_low_degree};
 
     use super::{columns, ArithmeticStark};
     use crate::arithmetic::columns::OUTPUT_REGISTER;
     use crate::arithmetic::*;
-    use crate::stark_testing::{test_stark_circuit_constraints, test_stark_low_degree};
 
     #[test]
     fn degree() -> Result<()> {

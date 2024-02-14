@@ -1,7 +1,8 @@
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use eth_trie_utils::nibbles::Nibbles;
 use eth_trie_utils::partial_trie::{HashedPartialTrie, PartialTrie};
 use ethereum_types::{BigEndianHash, H160, H256, U256};
+use plonky2::field::goldilocks_field::GoldilocksField as F;
 use rand::{random, thread_rng, Rng};
 use smt_utils_hermez::db::MemoryDb;
 use smt_utils_hermez::keys::key_balance;
@@ -66,7 +67,7 @@ fn test_state_trie(mut state_smt: Smt<MemoryDb>, k: Key, value: U256) -> Result<
     let smt_hash = KERNEL.global_labels["smt_hash"];
 
     let initial_stack = vec![];
-    let mut interpreter = Interpreter::new_with_kernel(0, initial_stack);
+    let mut interpreter: Interpreter<F> = Interpreter::new_with_kernel(0, initial_stack);
 
     initialize_mpts(&mut interpreter, &trie_inputs);
     assert_eq!(interpreter.stack(), vec![]);

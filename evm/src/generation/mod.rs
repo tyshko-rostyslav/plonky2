@@ -1,11 +1,8 @@
 use std::collections::{BTreeSet, HashMap};
-use std::sync::atomic::AtomicBool;
-use std::sync::Arc;
 
 use anyhow::anyhow;
 use eth_trie_utils::partial_trie::{HashedPartialTrie, PartialTrie};
 use ethereum_types::{Address, BigEndianHash, H256, U256};
-use itertools::enumerate;
 use plonky2::field::extension::Extendable;
 use plonky2::field::polynomial::PolynomialValues;
 use plonky2::field::types::Field;
@@ -13,25 +10,21 @@ use plonky2::hash::hash_types::RichField;
 use plonky2::timed;
 use plonky2::util::timing::TimingTree;
 use serde::{Deserialize, Serialize};
+use starky::config::StarkConfig;
 use GlobalMetadata::{
     ReceiptTrieRootDigestAfter, ReceiptTrieRootDigestBefore, StateTrieRootDigestAfter,
     StateTrieRootDigestBefore, TransactionTrieRootDigestAfter, TransactionTrieRootDigestBefore,
 };
 
 use crate::all_stark::{AllStark, NUM_TABLES};
-use crate::config::StarkConfig;
 use crate::cpu::columns::CpuColumnsView;
 use crate::cpu::kernel::aggregator::KERNEL;
-use crate::cpu::kernel::assembler::Kernel;
 use crate::cpu::kernel::constants::global_metadata::GlobalMetadata;
-use crate::cpu::kernel::opcodes::get_opcode;
 use crate::generation::state::GenerationState;
 use crate::generation::trie_extractor::{get_receipt_trie, get_state_trie, get_txn_trie};
 use crate::memory::segments::Segment;
 use crate::proof::{BlockHashes, BlockMetadata, ExtraBlockData, PublicValues, TrieRoots};
-use crate::prover::check_abort_signal;
 use crate::util::{h2u, u256_to_u8, u256_to_usize};
-use crate::witness::errors::{ProgramError, ProverInputError};
 use crate::witness::memory::{MemoryAddress, MemoryChannel};
 use crate::witness::transition::transition;
 
@@ -292,7 +285,6 @@ pub fn generate_traces<F: RichField + Extendable<D>, const D: usize>(
     let gas_used_after = read_metadata(GlobalMetadata::BlockGasUsedAfter);
     let txn_number_after = read_metadata(GlobalMetadata::TxnNumberAfter);
 
-    let trie_root_ptrs = state.trie_root_ptrs;
     let extra_block_data = ExtraBlockData {
         checkpoint_state_trie_root: inputs.checkpoint_state_trie_root,
         txn_number_before: inputs.txn_number_before,
@@ -350,89 +342,5 @@ fn simulate_cpu<F: RichField>(state: &mut GenerationState<F>) -> anyhow::Result<
         }
 
         transition(state)?;
-    }
-}
-
-fn simulate_cpu_between_labels_and_get_user_jumps<F: RichField>(
-    initial_label: &str,
-    final_label: &str,
-    state: &mut GenerationState<F>,
-) -> Option<HashMap<usize, BTreeSet<usize>>> {
-    if state.jumpdest_table.is_some() {
-        None
-    } else {
-        const JUMP_OPCODE: u8 = 0x56;
-        const JUMPI_OPCODE: u8 = 0x57;
-
-        let halt_pc = KERNEL.global_labels[final_label];
-        let mut jumpdest_addresses: HashMap<_, BTreeSet<usize>> = HashMap::new();
-
-        state.registers.program_counter = KERNEL.global_labels[initial_label];
-        let initial_clock = state.traces.clock();
-        let initial_context = state.registers.context;
-
-        log::debug!("Simulating CPU for jumpdest analysis.");
-
-        loop {
-            // skip jumpdest table validations in simulations
-            if state.registers.is_kernel
-                && state.registers.program_counter == KERNEL.global_labels["jumpdest_analysis"]
-            {
-                state.registers.program_counter = KERNEL.global_labels["jumpdest_analysis_end"]
-            }
-            let pc = state.registers.program_counter;
-            let context = state.registers.context;
-            let mut halt = state.registers.is_kernel
-                && pc == halt_pc
-                && state.registers.context == initial_context;
-            let Ok(opcode) = u256_to_u8(state.memory.get(MemoryAddress::new(
-                context,
-                Segment::Code,
-                state.registers.program_counter,
-            ))) else {
-                log::debug!(
-                    "Simulated CPU for jumpdest analysis halted after {} cycles",
-                    state.traces.clock() - initial_clock
-                );
-                return Some(jumpdest_addresses);
-            };
-            let cond = if let Ok(cond) = stack_peek(state, 1) {
-                cond != U256::zero()
-            } else {
-                false
-            };
-            if !state.registers.is_kernel
-                && (opcode == JUMP_OPCODE || (opcode == JUMPI_OPCODE && cond))
-            {
-                // Avoid deeper calls to abort
-                let Ok(jumpdest) = u256_to_usize(state.registers.stack_top) else {
-                    log::debug!(
-                        "Simulated CPU for jumpdest analysis halted after {} cycles",
-                        state.traces.clock() - initial_clock
-                    );
-                    return Some(jumpdest_addresses);
-                };
-                state.memory.set(
-                    MemoryAddress::new(context, Segment::JumpdestBits, jumpdest),
-                    U256::one(),
-                );
-                let jumpdest_opcode =
-                    state
-                        .memory
-                        .get(MemoryAddress::new(context, Segment::Code, jumpdest));
-                if let Some(ctx_addresses) = jumpdest_addresses.get_mut(&context) {
-                    ctx_addresses.insert(jumpdest);
-                } else {
-                    jumpdest_addresses.insert(context, BTreeSet::from([jumpdest]));
-                }
-            }
-            if halt || transition(state).is_err() {
-                log::debug!(
-                    "Simulated CPU for jumpdest analysis halted after {} cycles",
-                    state.traces.clock() - initial_clock
-                );
-                return Some(jumpdest_addresses);
-            }
-        }
     }
 }

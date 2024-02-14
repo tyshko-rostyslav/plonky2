@@ -1,10 +1,12 @@
 use anyhow::{anyhow, Result};
 use ethereum_types::{BigEndianHash, H160, U256};
+use plonky2::field::goldilocks_field::GoldilocksField as F;
 use plonky2::field::types::Field;
+use plonky2::hash::hash_types::RichField;
 use rand::{thread_rng, Rng};
 use smt_utils_hermez::db::MemoryDb;
 use smt_utils_hermez::keys::key_balance;
-use smt_utils_hermez::smt::{Key, Smt, F};
+use smt_utils_hermez::smt::{Key, Smt};
 use smt_utils_hermez::utils::key2u;
 
 use crate::cpu::kernel::aggregator::KERNEL;
@@ -29,7 +31,7 @@ fn smt_read() -> Result<()> {
     let smt_read_state = KERNEL.global_labels["smt_read_state"];
 
     let initial_stack = vec![];
-    let mut interpreter = Interpreter::new_with_kernel(0, initial_stack);
+    let mut interpreter: Interpreter<F> = Interpreter::new_with_kernel(0, initial_stack);
     initialize_mpts(&mut interpreter, &trie_inputs);
     assert_eq!(interpreter.stack(), vec![]);
 

@@ -1,8 +1,8 @@
 //! Implementation of the Poseidon hash function, as described in
 //! <https://eprint.iacr.org/2019/458.pdf>
 
-use alloc::vec;
-use alloc::vec::Vec;
+#[cfg(not(feature = "std"))]
+use alloc::{vec, vec::Vec};
 use core::fmt::Debug;
 
 use plonky2_field::packed::PackedField;
@@ -917,8 +917,7 @@ impl<F: RichField> AlgebraicHasher<F> for PoseidonHash {
 
 #[cfg(test)]
 pub(crate) mod test_helpers {
-    use crate::field::types::Field;
-    use crate::hash::poseidon::{Poseidon, SPONGE_WIDTH};
+    use super::*;
 
     pub(crate) fn check_test_vectors<F: Field>(
         test_vectors: Vec<([u64; SPONGE_WIDTH], [u64; SPONGE_WIDTH])>,

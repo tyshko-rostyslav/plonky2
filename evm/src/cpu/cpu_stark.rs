@@ -8,25 +8,24 @@ use plonky2::field::packed::PackedField;
 use plonky2::field::types::Field;
 use plonky2::hash::hash_types::RichField;
 use plonky2::iop::ext_target::ExtensionTarget;
+use starky::constraint_consumer::{ConstraintConsumer, RecursiveConstraintConsumer};
+use starky::cross_table_lookup::TableWithColumns;
+use starky::evaluation_frame::StarkEvaluationFrame;
+use starky::lookup::{Column, Filter};
+use starky::stark::Stark;
 
 use super::columns::CpuColumnsView;
 use super::halt;
 use super::kernel::constants::context_metadata::ContextMetadata;
 use super::membus::NUM_GP_CHANNELS;
-use crate::all_stark::Table;
-use crate::constraint_consumer::{ConstraintConsumer, RecursiveConstraintConsumer};
+use crate::all_stark::{EvmStarkFrame, Table};
 use crate::cpu::columns::{COL_MAP, NUM_CPU_COLUMNS};
 use crate::cpu::{
     byte_unpacking, clock, contextops, control_flow, decode, dup_swap, gas, jumps, membus, memio,
     modfp254, pc, push0, shift, simple_logic, stack, syscalls_exceptions,
 };
-use crate::cross_table_lookup::TableWithColumns;
-use crate::evaluation_frame::{StarkEvaluationFrame, StarkFrame};
-use crate::lookup::{Column, Filter, Lookup};
-use crate::memory;
 use crate::memory::segments::Segment;
 use crate::memory::{NUM_CHANNELS, VALUE_LIMBS};
-use crate::stark::Stark;
 
 /// Creates the vector of `Columns` corresponding to the General Purpose channels when calling the Keccak sponge:
 /// the CPU reads the output of the sponge directly from the `KeccakSpongeStark` table.
@@ -419,7 +418,7 @@ pub(crate) fn ctl_filter_set_context<F: Field>() -> Filter<F> {
 pub(crate) fn ctl_poseidon<F: Field>() -> TableWithColumns<F> {
     let mut columns = Vec::new();
     for channel in 0..3 {
-        for i in 0..memory::VALUE_LIMBS / 2 {
+        for i in 0..VALUE_LIMBS / 2 {
             columns.push(Column::linear_combination([
                 (COL_MAP.mem_channels[channel].value[2 * i], F::ONE),
                 (
@@ -478,12 +477,13 @@ pub(crate) struct CpuStark<F, const D: usize> {
 }
 
 impl<F: RichField + Extendable<D>, const D: usize> Stark<F, D> for CpuStark<F, D> {
-    type EvaluationFrame<FE, P, const D2: usize> = StarkFrame<P, NUM_CPU_COLUMNS>
+    type EvaluationFrame<FE, P, const D2: usize> = EvmStarkFrame<P, FE, NUM_CPU_COLUMNS>
     where
         FE: FieldExtension<D2, BaseField = F>,
         P: PackedField<Scalar = FE>;
 
-    type EvaluationFrameTarget = StarkFrame<ExtensionTarget<D>, NUM_CPU_COLUMNS>;
+    type EvaluationFrameTarget =
+        EvmStarkFrame<ExtensionTarget<D>, ExtensionTarget<D>, NUM_CPU_COLUMNS>;
 
     /// Evaluates all CPU constraints.
     fn eval_packed_generic<FE, P, const D2: usize>(
@@ -557,15 +557,19 @@ impl<F: RichField + Extendable<D>, const D: usize> Stark<F, D> for CpuStark<F, D
     fn constraint_degree(&self) -> usize {
         3
     }
+
+    fn requires_ctls(&self) -> bool {
+        true
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use anyhow::Result;
     use plonky2::plonk::config::{GenericConfig, PoseidonGoldilocksConfig};
+    use starky::stark_testing::{test_stark_circuit_constraints, test_stark_low_degree};
 
     use crate::cpu::cpu_stark::CpuStark;
-    use crate::stark_testing::{test_stark_circuit_constraints, test_stark_low_degree};
 
     #[test]
     fn test_stark_degree() -> Result<()> {

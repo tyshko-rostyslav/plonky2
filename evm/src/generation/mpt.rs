@@ -11,13 +11,10 @@ use rlp_derive::{RlpDecodable, RlpEncodable};
 use smt_utils_hermez::code::{hash_bytecode_u256, hash_contract_bytecode};
 use smt_utils_hermez::utils::hashout2u;
 
-use crate::cpu::kernel::constants::global_metadata::GlobalMetadata;
 use crate::cpu::kernel::constants::trie_type::PartialTrieType;
 use crate::generation::TrieInputs;
-use crate::memory::segments::Segment;
 use crate::util::h2u;
 use crate::witness::errors::{ProgramError, ProverInputError};
-use crate::witness::memory::MemoryAddress;
 use crate::Node;
 
 #[derive(RlpEncodable, RlpDecodable, Debug)]

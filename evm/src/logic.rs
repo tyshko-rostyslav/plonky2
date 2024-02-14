@@ -11,13 +11,15 @@ use plonky2::iop::ext_target::ExtensionTarget;
 use plonky2::timed;
 use plonky2::util::timing::TimingTree;
 use plonky2_util::ceil_div_usize;
+use starky::constraint_consumer::{ConstraintConsumer, RecursiveConstraintConsumer};
+use starky::evaluation_frame::StarkEvaluationFrame;
+use starky::lookup::{Column, Filter};
+use starky::stark::Stark;
+use starky::util::trace_rows_to_poly_values;
 
-use crate::constraint_consumer::{ConstraintConsumer, RecursiveConstraintConsumer};
-use crate::evaluation_frame::{StarkEvaluationFrame, StarkFrame};
+use crate::all_stark::EvmStarkFrame;
 use crate::logic::columns::NUM_COLUMNS;
-use crate::lookup::{Column, Filter};
-use crate::stark::Stark;
-use crate::util::{limb_from_bits_le, limb_from_bits_le_recursive, trace_rows_to_poly_values};
+use crate::util::{limb_from_bits_le, limb_from_bits_le_recursive};
 
 /// Total number of bits per input/output.
 const VAL_BITS: usize = 256;
@@ -210,12 +212,12 @@ impl<F: RichField, const D: usize> LogicStark<F, D> {
 }
 
 impl<F: RichField + Extendable<D>, const D: usize> Stark<F, D> for LogicStark<F, D> {
-    type EvaluationFrame<FE, P, const D2: usize> = StarkFrame<P, NUM_COLUMNS>
+    type EvaluationFrame<FE, P, const D2: usize> = EvmStarkFrame<P, FE, NUM_COLUMNS>
     where
         FE: FieldExtension<D2, BaseField = F>,
         P: PackedField<Scalar = FE>;
 
-    type EvaluationFrameTarget = StarkFrame<ExtensionTarget<D>, NUM_COLUMNS>;
+    type EvaluationFrameTarget = EvmStarkFrame<ExtensionTarget<D>, ExtensionTarget<D>, NUM_COLUMNS>;
 
     fn eval_packed_generic<FE, P, const D2: usize>(
         &self,
@@ -227,10 +229,18 @@ impl<F: RichField + Extendable<D>, const D: usize> Stark<F, D> for LogicStark<F,
     {
         let lv = vars.get_local_values();
 
-        // IS_AND, IS_OR, and IS_XOR come from the CPU table, so we assume they're valid.
         let is_and = lv[columns::IS_AND];
         let is_or = lv[columns::IS_OR];
         let is_xor = lv[columns::IS_XOR];
+
+        // Flags must be boolean.
+        for &flag in &[is_and, is_or, is_xor] {
+            yield_constr.constraint(flag * (flag - P::ONES));
+        }
+
+        // Only a single flag must be activated at once.
+        let all_flags = is_and + is_or + is_xor;
+        yield_constr.constraint(all_flags * (all_flags - P::ONES));
 
         // The result will be `in0 OP in1 = sum_coeff * (in0 + in1) + and_coeff * (in0 AND in1)`.
         // `AND => sum_coeff = 0, and_coeff = 1`
@@ -276,10 +286,20 @@ impl<F: RichField + Extendable<D>, const D: usize> Stark<F, D> for LogicStark<F,
     ) {
         let lv = vars.get_local_values();
 
-        // IS_AND, IS_OR, and IS_XOR come from the CPU table, so we assume they're valid.
         let is_and = lv[columns::IS_AND];
         let is_or = lv[columns::IS_OR];
         let is_xor = lv[columns::IS_XOR];
+
+        // Flags must be boolean.
+        for &flag in &[is_and, is_or, is_xor] {
+            let constraint = builder.mul_sub_extension(flag, flag, flag);
+            yield_constr.constraint(builder, constraint);
+        }
+
+        // Only a single flag must be activated at once.
+        let all_flags = builder.add_many_extension([is_and, is_or, is_xor]);
+        let constraint = builder.mul_sub_extension(all_flags, all_flags, all_flags);
+        yield_constr.constraint(builder, constraint);
 
         // The result will be `in0 OP in1 = sum_coeff * (in0 + in1) + and_coeff * (in0 AND in1)`.
         // `AND => sum_coeff = 0, and_coeff = 1`
@@ -336,15 +356,19 @@ impl<F: RichField + Extendable<D>, const D: usize> Stark<F, D> for LogicStark<F,
     fn constraint_degree(&self) -> usize {
         3
     }
+
+    fn requires_ctls(&self) -> bool {
+        true
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use anyhow::Result;
     use plonky2::plonk::config::{GenericConfig, PoseidonGoldilocksConfig};
+    use starky::stark_testing::{test_stark_circuit_constraints, test_stark_low_degree};
 
     use crate::logic::LogicStark;
-    use crate::stark_testing::{test_stark_circuit_constraints, test_stark_low_degree};
 
     #[test]
     fn test_stark_degree() -> Result<()> {

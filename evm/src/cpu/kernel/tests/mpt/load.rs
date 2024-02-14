@@ -1,17 +1,17 @@
 use std::str::FromStr;
 
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use eth_trie_utils::nibbles::Nibbles;
 use eth_trie_utils::partial_trie::HashedPartialTrie;
 use ethereum_types::{BigEndianHash, H160, H256, U256};
 use hex_literal::hex;
+use plonky2::field::goldilocks_field::GoldilocksField as F;
 use rand::{thread_rng, Rng};
 use smt_utils_hermez::db::MemoryDb;
 use smt_utils_hermez::keys::key_balance;
 use smt_utils_hermez::smt::Smt;
 use smt_utils_hermez::utils::key2u;
 
-use crate::cpu::kernel::aggregator::KERNEL;
 use crate::cpu::kernel::constants::global_metadata::GlobalMetadata;
 use crate::cpu::kernel::constants::smt_type::PartialSmtType;
 use crate::cpu::kernel::constants::trie_type::PartialTrieType;
@@ -31,7 +31,7 @@ fn load_all_mpts_empty() -> Result<()> {
     };
 
     let initial_stack = vec![];
-    let mut interpreter = Interpreter::new_with_kernel(0, initial_stack);
+    let mut interpreter: Interpreter<F> = Interpreter::new_with_kernel(0, initial_stack);
     initialize_mpts(&mut interpreter, &trie_inputs);
     assert_eq!(interpreter.stack(), vec![]);
 
@@ -67,7 +67,7 @@ fn load_all_mpts_leaf() -> Result<()> {
     };
 
     let initial_stack = vec![];
-    let mut interpreter = Interpreter::new_with_kernel(0, initial_stack);
+    let mut interpreter: Interpreter<F> = Interpreter::new_with_kernel(0, initial_stack);
     initialize_mpts(&mut interpreter, &trie_inputs);
     assert_eq!(interpreter.stack(), vec![]);
 
@@ -91,25 +91,25 @@ fn load_all_mpts_leaf() -> Result<()> {
 
 // #[test]
 // fn load_all_mpts_hash() -> Result<()> {
-//     let hash = U256::random();
+//     let hash = H256::random();
 //     let trie_inputs = TrieInputs {
 //         state_trie: Node::Hash(hash).into(),
 //         transactions_trie: Default::default(),
 //         receipts_trie: Default::default(),
 //         storage_tries: vec![],
 //     };
-//
+
 //     let initial_stack = vec![];
-//     let mut interpreter = Interpreter::new_with_kernel(0, initial_stack);
+//     let mut interpreter: Interpreter<F> = Interpreter::new_with_kernel(0, initial_stack);
 //     initialize_mpts(&mut interpreter, &trie_inputs);
 //     assert_eq!(interpreter.stack(), vec![]);
-//
+
 //     let type_hash = U256::from(PartialTrieType::Hash as u32);
 //     assert_eq!(
 //         interpreter.get_trie_data(),
 //         vec![0.into(), type_hash, hash.into_uint(),]
 //     );
-//
+
 //     assert_eq!(
 //         interpreter.get_global_metadata_field(GlobalMetadata::TransactionTrieRoot),
 //         0.into()
@@ -118,10 +118,10 @@ fn load_all_mpts_leaf() -> Result<()> {
 //         interpreter.get_global_metadata_field(GlobalMetadata::ReceiptTrieRoot),
 //         0.into()
 //     );
-//
+
 //     Ok(())
 // }
-//
+
 // #[test]
 // fn load_all_mpts_empty_branch() -> Result<()> {
 //     let children = core::array::from_fn(|_| Node::Empty.into());
@@ -136,12 +136,12 @@ fn load_all_mpts_leaf() -> Result<()> {
 //         receipts_trie: Default::default(),
 //         storage_tries: vec![],
 //     };
-//
+
 //     let initial_stack = vec![];
-//     let mut interpreter = Interpreter::new_with_kernel(0, initial_stack);
+//     let mut interpreter: Interpreter<F> = Interpreter::new_with_kernel(0, initial_stack);
 //     initialize_mpts(&mut interpreter, &trie_inputs);
 //     assert_eq!(interpreter.stack(), vec![]);
-//
+
 //     let type_branch = U256::from(PartialTrieType::Branch as u32);
 //     assert_eq!(
 //         interpreter.get_trie_data(),
@@ -167,7 +167,7 @@ fn load_all_mpts_leaf() -> Result<()> {
 //             0.into(), // value_ptr
 //         ]
 //     );
-//
+
 //     assert_eq!(
 //         interpreter.get_global_metadata_field(GlobalMetadata::TransactionTrieRoot),
 //         0.into()
@@ -176,10 +176,10 @@ fn load_all_mpts_leaf() -> Result<()> {
 //         interpreter.get_global_metadata_field(GlobalMetadata::ReceiptTrieRoot),
 //         0.into()
 //     );
-//
+
 //     Ok(())
 // }
-//
+
 // #[test]
 // fn load_all_mpts_ext_to_leaf() -> Result<()> {
 //     let trie_inputs = TrieInputs {
@@ -188,12 +188,12 @@ fn load_all_mpts_leaf() -> Result<()> {
 //         receipts_trie: Default::default(),
 //         storage_tries: vec![],
 //     };
-//
+
 //     let initial_stack = vec![];
-//     let mut interpreter = Interpreter::new_with_kernel(0, initial_stack);
+//     let mut interpreter: Interpreter<F> = Interpreter::new_with_kernel(0, initial_stack);
 //     initialize_mpts(&mut interpreter, &trie_inputs);
 //     assert_eq!(interpreter.stack(), vec![]);
-//
+
 //     let type_extension = U256::from(PartialTrieType::Extension as u32);
 //     let type_leaf = U256::from(PartialTrieType::Leaf as u32);
 //     assert_eq!(
@@ -217,14 +217,14 @@ fn load_all_mpts_leaf() -> Result<()> {
 //             test_account_1().storage_root.into_uint(),
 //         ]
 //     );
-//
+
 //     Ok(())
 // }
-//
+
 // #[test]
 // fn load_mpt_txn_trie() -> Result<()> {
 //     let txn = hex!("f860010a830186a094095e7baea6a6c7c4c2dfeb977efac326af552e89808025a04a223955b0bd3827e3740a9a427d0ea43beb5bafa44a0204bf0a3306c8219f7ba0502c32d78f233e9e7ce9f5df3b576556d5d49731e0678fd5a068cdf359557b5b").to_vec();
-//
+
 //     let trie_inputs = TrieInputs {
 //         state_trie: Default::default(),
 //         transactions_trie: HashedPartialTrie::from(Node::Leaf {
@@ -234,12 +234,12 @@ fn load_all_mpts_leaf() -> Result<()> {
 //         receipts_trie: Default::default(),
 //         storage_tries: vec![],
 //     };
-//
+
 //     let initial_stack = vec![];
-//     let mut interpreter = Interpreter::new_with_kernel(0, initial_stack);
+//     let mut interpreter: Interpreter<F> = Interpreter::new_with_kernel(0, initial_stack);
 //     initialize_mpts(&mut interpreter, &trie_inputs);
 //     assert_eq!(interpreter.stack(), vec![]);
-//
+
 //     let mut expected_trie_data = vec![
 //         0.into(),
 //         U256::from(PartialTrieType::Leaf as u32),
@@ -250,8 +250,8 @@ fn load_all_mpts_leaf() -> Result<()> {
 //     ];
 //     expected_trie_data.extend(txn.into_iter().map(U256::from));
 //     let trie_data = interpreter.get_trie_data();
-//
+
 //     assert_eq!(trie_data, expected_trie_data);
-//
+
 //     Ok(())
 // }

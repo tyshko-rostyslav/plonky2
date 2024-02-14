@@ -15,7 +15,8 @@ anyhow = "1.0.40"
 bytes = "1.4.0"
 env_logger = "0.10.0"
 eth_trie_utils = { git = "https://github.com/0xPolygonZero/eth_trie_utils.git", rev = "7fc3c3f54b3cec9c6fc5ffc5230910bd1cb77f76" }
-smt_utils_hermez = { git = "https://github.com/wborgeaud/smt-utils-hermez", rev = "17e94ea51f740331821c471810108ce16bd9bc9a"}
+# TODO: Move to zk_evm monorepo
+smt_utils_hermez = { git = "https://github.com/Nashtare/smt-utils-hermez", rev = "631f877502e1d0175d426564b7d4713fa5268379"}
 ethereum-types = "0.14.0"
 hex = { version = "0.4.3", optional = true }
 hex-literal = "0.4.1"
@@ -28,8 +29,9 @@ num-bigint = "0.4.3"
 once_cell = "1.13.0"
 pest = "2.1.3"
 pest_derive = "2.1.0"
-plonky2 = { path = "../plonky2", default-features = false, features = ["timing"] }
+plonky2 = { path = "../plonky2", features = ["timing"] }
 plonky2_util = { path = "../util" }
+starky = { path = "../starky" }
 rand = "0.8.5"
 rand_chacha = "0.3.1"
 rlp = "0.5.1"
@@ -52,7 +54,11 @@ sha2 = "0.10.6"
 [features]
 default = ["parallel"]
 asmtools = ["hex"]
-parallel = ["plonky2/parallel", "plonky2_maybe_rayon/parallel"]
+parallel = [
+    "plonky2/parallel",
+    "plonky2_maybe_rayon/parallel",
+    "starky/parallel"
+]
 
 [[bin]]
 name = "assemble"

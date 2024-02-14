@@ -1,19 +1,19 @@
-use core::iter;
 use core::ops::Deref;
 
-use itertools::Itertools;
 use plonky2::field::extension::Extendable;
 use plonky2::field::types::Field;
 use plonky2::hash::hash_types::RichField;
+use starky::config::StarkConfig;
+use starky::cross_table_lookup::{CrossTableLookup, TableIdx, TableWithColumns};
+use starky::evaluation_frame::StarkFrame;
+use starky::stark::Stark;
 
 use crate::arithmetic::arithmetic_stark;
 use crate::arithmetic::arithmetic_stark::ArithmeticStark;
 use crate::byte_packing::byte_packing_stark::{self, BytePackingStark};
-use crate::config::StarkConfig;
 use crate::cpu::cpu_stark;
 use crate::cpu::cpu_stark::CpuStark;
 use crate::cpu::membus::NUM_GP_CHANNELS;
-use crate::cross_table_lookup::{CrossTableLookup, TableIdx, TableWithColumns};
 use crate::keccak::keccak_stark;
 use crate::keccak::keccak_stark::KeccakStark;
 use crate::keccak_sponge::columns::KECCAK_RATE_BYTES;
@@ -25,7 +25,6 @@ use crate::memory::memory_stark;
 use crate::memory::memory_stark::MemoryStark;
 use crate::poseidon::poseidon_stark;
 use crate::poseidon::poseidon_stark::PoseidonStark;
-use crate::stark::Stark;
 
 /// Structure containing all STARKs and the cross-table lookups.
 #[derive(Clone)]
@@ -72,6 +71,8 @@ impl<F: RichField + Extendable<D>, const D: usize> AllStark<F, D> {
         ]
     }
 }
+
+pub type EvmStarkFrame<T, U, const N: usize> = StarkFrame<T, U, N, 0>;
 
 /// Associates STARK tables with a unique index.
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]

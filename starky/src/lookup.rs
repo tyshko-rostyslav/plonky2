@@ -1,21 +1,29 @@
+//! A Lookup protocol leveraging logarithmic derivatives,
+//! introduced in <https://eprint.iacr.org/2022/1530.pdf>.
+
+#[cfg(not(feature = "std"))]
+use alloc::{vec, vec::Vec};
 use core::borrow::Borrow;
 use core::fmt::Debug;
 use core::iter::repeat;
 
 use itertools::Itertools;
 use num_bigint::BigUint;
-use plonky2::field::batch_util::{batch_add_inplace, batch_multiply_inplace};
+use plonky2::field::batch_util::batch_add_inplace;
 use plonky2::field::extension::{Extendable, FieldExtension};
 use plonky2::field::packed::PackedField;
 use plonky2::field::polynomial::PolynomialValues;
 use plonky2::field::types::Field;
 use plonky2::hash::hash_types::RichField;
+use plonky2::iop::challenger::{Challenger, RecursiveChallenger};
 use plonky2::iop::ext_target::ExtensionTarget;
 use plonky2::iop::target::Target;
 use plonky2::plonk::circuit_builder::CircuitBuilder;
+use plonky2::plonk::config::{AlgebraicHasher, Hasher};
 use plonky2::plonk::plonk_common::{
     reduce_with_powers, reduce_with_powers_circuit, reduce_with_powers_ext_circuit,
 };
+use plonky2::util::serialization::{Buffer, IoResult, Read, Write};
 use plonky2_util::ceil_div_usize;
 
 use crate::constraint_consumer::{ConstraintConsumer, RecursiveConstraintConsumer};
@@ -26,13 +34,14 @@ use crate::stark::Stark;
 /// It's an arbitrary degree 2 combination of columns: `products` are the degree 2 terms, and `constants` are
 /// the degree 1 terms.
 #[derive(Clone, Debug)]
-pub(crate) struct Filter<F: Field> {
+pub struct Filter<F: Field> {
     products: Vec<(Column<F>, Column<F>)>,
     constants: Vec<Column<F>>,
 }
 
 impl<F: Field> Filter<F> {
-    pub(crate) fn new(products: Vec<(Column<F>, Column<F>)>, constants: Vec<Column<F>>) -> Self {
+    /// Returns a filter from the provided `products` and `constants` vectors.
+    pub fn new(products: Vec<(Column<F>, Column<F>)>, constants: Vec<Column<F>>) -> Self {
         Self {
             products,
             constants,
@@ -40,7 +49,7 @@ impl<F: Field> Filter<F> {
     }
 
     /// Returns a filter made of a single column.
-    pub(crate) fn new_simple(col: Column<F>) -> Self {
+    pub fn new_simple(col: Column<F>) -> Self {
         Self {
             products: vec![],
             constants: vec![col],
@@ -108,14 +117,6 @@ impl<F: Field> Filter<F> {
                 .map(|col| col.eval_table(table, row))
                 .sum()
     }
-
-    pub(crate) fn eval_all_rows(&self, table: &[PolynomialValues<F>]) -> Vec<F> {
-        let length = table[0].len();
-
-        (0..length)
-            .map(|row| self.eval_table(table, row))
-            .collect::<Vec<F>>()
-    }
 }
 
 /// Represent two linear combination of columns, corresponding to the current and next row values.
@@ -123,7 +124,7 @@ impl<F: Field> Filter<F> {
 /// - a vector of `(usize, F)` corresponding to the column number and the associated multiplicand
 /// - the constant of the linear combination.
 #[derive(Clone, Debug)]
-pub(crate) struct Column<F: Field> {
+pub struct Column<F: Field> {
     linear_combination: Vec<(usize, F)>,
     next_row_linear_combination: Vec<(usize, F)>,
     constant: F,
@@ -131,7 +132,7 @@ pub(crate) struct Column<F: Field> {
 
 impl<F: Field> Column<F> {
     /// Returns the representation of a single column in the current row.
-    pub(crate) fn single(c: usize) -> Self {
+    pub fn single(c: usize) -> Self {
         Self {
             linear_combination: vec![(c, F::ONE)],
             next_row_linear_combination: vec![],
@@ -140,14 +141,14 @@ impl<F: Field> Column<F> {
     }
 
     /// Returns multiple single columns in the current row.
-    pub(crate) fn singles<I: IntoIterator<Item = impl Borrow<usize>>>(
+    pub fn singles<I: IntoIterator<Item = impl Borrow<usize>>>(
         cs: I,
     ) -> impl Iterator<Item = Self> {
         cs.into_iter().map(|c| Self::single(*c.borrow()))
     }
 
     /// Returns the representation of a single column in the next row.
-    pub(crate) fn single_next_row(c: usize) -> Self {
+    pub fn single_next_row(c: usize) -> Self {
         Self {
             linear_combination: vec![],
             next_row_linear_combination: vec![(c, F::ONE)],
@@ -156,14 +157,14 @@ impl<F: Field> Column<F> {
     }
 
     /// Returns multiple single columns for the next row.
-    pub(crate) fn singles_next_row<I: IntoIterator<Item = impl Borrow<usize>>>(
+    pub fn singles_next_row<I: IntoIterator<Item = impl Borrow<usize>>>(
         cs: I,
     ) -> impl Iterator<Item = Self> {
         cs.into_iter().map(|c| Self::single_next_row(*c.borrow()))
     }
 
     /// Returns a linear combination corresponding to a constant.
-    pub(crate) fn constant(constant: F) -> Self {
+    pub fn constant(constant: F) -> Self {
         Self {
             linear_combination: vec![],
             next_row_linear_combination: vec![],
@@ -172,27 +173,32 @@ impl<F: Field> Column<F> {
     }
 
     /// Returns a linear combination corresponding to 0.
-    pub(crate) fn zero() -> Self {
+    pub fn zero() -> Self {
         Self::constant(F::ZERO)
     }
 
     /// Returns a linear combination corresponding to 1.
-    pub(crate) fn one() -> Self {
+    pub fn one() -> Self {
         Self::constant(F::ONE)
     }
 
     /// Given an iterator of `(usize, F)` and a constant, returns the association linear combination of columns for the current row.
-    pub(crate) fn linear_combination_with_constant<I: IntoIterator<Item = (usize, F)>>(
+    pub fn linear_combination_with_constant<I: IntoIterator<Item = (usize, F)>>(
         iter: I,
         constant: F,
     ) -> Self {
         let v = iter.into_iter().collect::<Vec<_>>();
         assert!(!v.is_empty());
+
+        // Because this is a debug assertion, we only check it when the `std`
+        // feature is activated, as `Itertools::unique` relies on collections.
+        #[cfg(feature = "std")]
         debug_assert_eq!(
             v.iter().map(|(c, _)| c).unique().count(),
             v.len(),
             "Duplicate columns."
         );
+
         Self {
             linear_combination: v,
             next_row_linear_combination: vec![],
@@ -201,9 +207,7 @@ impl<F: Field> Column<F> {
     }
 
     /// Given an iterator of `(usize, F)` and a constant, returns the associated linear combination of columns for the current and the next rows.
-    pub(crate) fn linear_combination_and_next_row_with_constant<
-        I: IntoIterator<Item = (usize, F)>,
-    >(
+    pub fn linear_combination_and_next_row_with_constant<I: IntoIterator<Item = (usize, F)>>(
         iter: I,
         next_row_iter: I,
         constant: F,
@@ -212,16 +216,22 @@ impl<F: Field> Column<F> {
         let next_row_v = next_row_iter.into_iter().collect::<Vec<_>>();
 
         assert!(!v.is_empty() || !next_row_v.is_empty());
-        debug_assert_eq!(
-            v.iter().map(|(c, _)| c).unique().count(),
-            v.len(),
-            "Duplicate columns."
-        );
-        debug_assert_eq!(
-            next_row_v.iter().map(|(c, _)| c).unique().count(),
-            next_row_v.len(),
-            "Duplicate columns."
-        );
+
+        // Because these are debug assertions, we only check them when the `std`
+        // feature is activated, as `Itertools::unique` relies on collections.
+        #[cfg(feature = "std")]
+        {
+            debug_assert_eq!(
+                v.iter().map(|(c, _)| c).unique().count(),
+                v.len(),
+                "Duplicate columns."
+            );
+            debug_assert_eq!(
+                next_row_v.iter().map(|(c, _)| c).unique().count(),
+                next_row_v.len(),
+                "Duplicate columns."
+            );
+        }
 
         Self {
             linear_combination: v,
@@ -231,20 +241,20 @@ impl<F: Field> Column<F> {
     }
 
     /// Returns a linear combination of columns, with no additional constant.
-    pub(crate) fn linear_combination<I: IntoIterator<Item = (usize, F)>>(iter: I) -> Self {
+    pub fn linear_combination<I: IntoIterator<Item = (usize, F)>>(iter: I) -> Self {
         Self::linear_combination_with_constant(iter, F::ZERO)
     }
 
     /// Given an iterator of columns (c_0, ..., c_n) containing bits in little endian order:
     /// returns the representation of c_0 + 2 * c_1 + ... + 2^n * c_n.
-    pub(crate) fn le_bits<I: IntoIterator<Item = impl Borrow<usize>>>(cs: I) -> Self {
+    pub fn le_bits<I: IntoIterator<Item = impl Borrow<usize>>>(cs: I) -> Self {
         Self::linear_combination(cs.into_iter().map(|c| *c.borrow()).zip(F::TWO.powers()))
     }
 
     /// Given an iterator of columns (c_0, ..., c_n) containing bits in little endian order:
     /// returns the representation of c_0 + 2 * c_1 + ... + 2^n * c_n + k where `k` is an
     /// additional constant.
-    pub(crate) fn le_bits_with_constant<I: IntoIterator<Item = impl Borrow<usize>>>(
+    pub fn le_bits_with_constant<I: IntoIterator<Item = impl Borrow<usize>>>(
         cs: I,
         constant: F,
     ) -> Self {
@@ -256,7 +266,7 @@ impl<F: Field> Column<F> {
 
     /// Given an iterator of columns (c_0, ..., c_n) containing bytes in little endian order:
     /// returns the representation of c_0 + 256 * c_1 + ... + 256^n * c_n.
-    pub(crate) fn le_bytes<I: IntoIterator<Item = impl Borrow<usize>>>(cs: I) -> Self {
+    pub fn le_bytes<I: IntoIterator<Item = impl Borrow<usize>>>(cs: I) -> Self {
         Self::linear_combination(
             cs.into_iter()
                 .map(|c| *c.borrow())
@@ -265,7 +275,7 @@ impl<F: Field> Column<F> {
     }
 
     /// Given an iterator of columns, returns the representation of their sum.
-    pub(crate) fn sum<I: IntoIterator<Item = impl Borrow<usize>>>(cs: I) -> Self {
+    pub fn sum<I: IntoIterator<Item = impl Borrow<usize>>>(cs: I) -> Self {
         Self::linear_combination(cs.into_iter().map(|c| *c.borrow()).zip(repeat(F::ONE)))
     }
 
@@ -388,24 +398,37 @@ impl<F: Field> Column<F> {
 
 pub(crate) type ColumnFilter<'a, F> = (&'a [Column<F>], &'a Option<Filter<F>>);
 
+/// A [`Lookup`] defines a set of `columns`` whose values should appear in a
+/// `table_column` (i.e. the lookup table associated to these looking columns),
+/// along with a `frequencies_column` indicating the frequency of each looking
+/// column in the looked table.
+///
+/// It also features a `filter_columns` vector, optionally adding at most one
+/// filter per looking column.
+///
+/// The lookup argumented implemented here is based on logarithmic derivatives,
+/// a technique described with the whole lookup protocol in
+/// <https://eprint.iacr.org/2022/1530>.
+#[derive(Debug)]
 pub struct Lookup<F: Field> {
     /// Columns whose values should be contained in the lookup table.
     /// These are the f_i(x) polynomials in the logUp paper.
-    pub(crate) columns: Vec<Column<F>>,
+    pub columns: Vec<Column<F>>,
     /// Column containing the lookup table.
-    /// This is the t(x) polynomial in the paper.
-    pub(crate) table_column: Column<F>,
+    /// This is the t(x) polynomial in the logUp paper.
+    pub table_column: Column<F>,
     /// Column containing the frequencies of `columns` in `table_column`.
     /// This is the m(x) polynomial in the paper.
-    pub(crate) frequencies_column: Column<F>,
+    pub frequencies_column: Column<F>,
 
     /// Columns to filter some elements. There is at most one filter
-    /// column per column to range-check.
-    pub(crate) filter_columns: Vec<Option<Filter<F>>>,
+    /// column per column to lookup.
+    pub filter_columns: Vec<Option<Filter<F>>>,
 }
 
 impl<F: Field> Lookup<F> {
-    pub(crate) fn num_helper_columns(&self, constraint_degree: usize) -> usize {
+    /// Outputs the number of helper columns needed by this [`Lookup`].
+    pub fn num_helper_columns(&self, constraint_degree: usize) -> usize {
         // One helper column for each column batch of size `constraint_degree-1`,
         // then one column for the inverse of `table + challenge` and one for the `Z` polynomial.
         ceil_div_usize(self.columns.len(), constraint_degree - 1) + 1
@@ -414,18 +437,18 @@ impl<F: Field> Lookup<F> {
 
 /// Randomness for a single instance of a permutation check protocol.
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
-pub(crate) struct GrandProductChallenge<T: Copy + Eq + PartialEq + Debug> {
+pub struct GrandProductChallenge<T: Copy + Eq + PartialEq + Debug> {
     /// Randomness used to combine multiple columns into one.
-    pub(crate) beta: T,
+    pub beta: T,
     /// Random offset that's added to the beta-reduced column values.
-    pub(crate) gamma: T,
+    pub gamma: T,
 }
 
 impl<F: Field> GrandProductChallenge<F> {
-    pub(crate) fn combine<'a, FE, P, T: IntoIterator<Item = &'a P>, const D2: usize>(
-        &self,
-        terms: T,
-    ) -> P
+    /// Combines a series of values `t_i` with these challenge random values.
+    /// In particular, given `beta` and `gamma` challenges, this will compute
+    /// `(Σ t_i * beta^i) + gamma`.
+    pub fn combine<'a, FE, P, T: IntoIterator<Item = &'a P>, const D2: usize>(&self, terms: T) -> P
     where
         FE: FieldExtension<D2, BaseField = F>,
         P: PackedField<Scalar = FE>,
@@ -448,7 +471,8 @@ impl GrandProductChallenge<Target> {
 }
 
 impl GrandProductChallenge<Target> {
-    pub(crate) fn combine_base_circuit<F: RichField + Extendable<D>, const D: usize>(
+    /// Circuit version of `combine`.
+    pub fn combine_base_circuit<F: RichField + Extendable<D>, const D: usize>(
         &self,
         builder: &mut CircuitBuilder<F, D>,
         terms: &[Target],
@@ -456,6 +480,89 @@ impl GrandProductChallenge<Target> {
         let reduced = reduce_with_powers_circuit(builder, terms, self.beta);
         builder.add(reduced, self.gamma)
     }
+}
+
+/// Like `GrandProductChallenge`, but with `num_challenges` copies to boost soundness.
+#[derive(Clone, Eq, PartialEq, Debug)]
+pub struct GrandProductChallengeSet<T: Copy + Eq + PartialEq + Debug> {
+    /// A sequence of `num_challenges` challenge pairs, where `num_challenges`
+    /// is defined in [`StarkConfig`][crate::config::StarkConfig].
+    pub challenges: Vec<GrandProductChallenge<T>>,
+}
+
+impl GrandProductChallengeSet<Target> {
+    /// Serializes this `GrandProductChallengeSet` of `Target`s.
+    pub fn to_buffer(&self, buffer: &mut Vec<u8>) -> IoResult<()> {
+        buffer.write_usize(self.challenges.len())?;
+        for challenge in &self.challenges {
+            buffer.write_target(challenge.beta)?;
+            buffer.write_target(challenge.gamma)?;
+        }
+        Ok(())
+    }
+
+    /// Serializes a `GrandProductChallengeSet` of `Target`s from the provided buffer.
+    pub fn from_buffer(buffer: &mut Buffer) -> IoResult<Self> {
+        let length = buffer.read_usize()?;
+        let mut challenges = Vec::with_capacity(length);
+        for _ in 0..length {
+            challenges.push(GrandProductChallenge {
+                beta: buffer.read_target()?,
+                gamma: buffer.read_target()?,
+            });
+        }
+
+        Ok(GrandProductChallengeSet { challenges })
+    }
+}
+
+fn get_grand_product_challenge<F: RichField, H: Hasher<F>>(
+    challenger: &mut Challenger<F, H>,
+) -> GrandProductChallenge<F> {
+    let beta = challenger.get_challenge();
+    let gamma = challenger.get_challenge();
+    GrandProductChallenge { beta, gamma }
+}
+
+/// Generates a new `GrandProductChallengeSet` containing `num_challenges`
+/// pairs of challenges from the current `challenger` state.
+pub fn get_grand_product_challenge_set<F: RichField, H: Hasher<F>>(
+    challenger: &mut Challenger<F, H>,
+    num_challenges: usize,
+) -> GrandProductChallengeSet<F> {
+    let challenges = (0..num_challenges)
+        .map(|_| get_grand_product_challenge(challenger))
+        .collect();
+    GrandProductChallengeSet { challenges }
+}
+
+fn get_grand_product_challenge_target<
+    F: RichField + Extendable<D>,
+    H: AlgebraicHasher<F>,
+    const D: usize,
+>(
+    builder: &mut CircuitBuilder<F, D>,
+    challenger: &mut RecursiveChallenger<F, H, D>,
+) -> GrandProductChallenge<Target> {
+    let beta = challenger.get_challenge(builder);
+    let gamma = challenger.get_challenge(builder);
+    GrandProductChallenge { beta, gamma }
+}
+
+/// Circuit version of `get_grand_product_challenge_set`.
+pub fn get_grand_product_challenge_set_target<
+    F: RichField + Extendable<D>,
+    H: AlgebraicHasher<F>,
+    const D: usize,
+>(
+    builder: &mut CircuitBuilder<F, D>,
+    challenger: &mut RecursiveChallenger<F, H, D>,
+    num_challenges: usize,
+) -> GrandProductChallengeSet<Target> {
+    let challenges = (0..num_challenges)
+        .map(|_| get_grand_product_challenge_target(builder, challenger))
+        .collect();
+    GrandProductChallengeSet { challenges }
 }
 
 /// logUp protocol from <https://ia.cr/2022/1530>
@@ -469,8 +576,8 @@ pub(crate) fn lookup_helper_columns<F: Field>(
     challenge: F,
     constraint_degree: usize,
 ) -> Vec<PolynomialValues<F>> {
-    assert_eq!(
-        constraint_degree, 3,
+    assert!(
+        constraint_degree == 2 || constraint_degree == 3,
         "TODO: Allow other constraint degrees."
     );
 
@@ -480,7 +587,6 @@ pub(crate) fn lookup_helper_columns<F: Field>(
     assert!(BigUint::from(num_total_logup_entries) < F::characteristic());
 
     let num_helper_columns = lookup.num_helper_columns(constraint_degree);
-    let mut helper_columns: Vec<PolynomialValues<F>> = Vec::with_capacity(num_helper_columns);
 
     let looking_cols = lookup
         .columns
@@ -672,7 +778,6 @@ pub(crate) fn get_helper_cols<F: Field>(
 
     let mut helper_columns = Vec::with_capacity(num_helper_columns);
 
-    let mut filter_index = 0;
     for mut cols_filts in &columns_filters.iter().chunks(constraint_degree - 1) {
         let (first_col, first_filter) = cols_filts.next().unwrap();
 
@@ -752,6 +857,7 @@ pub(crate) fn get_helper_cols<F: Field>(
     helper_columns
 }
 
+#[derive(Debug)]
 pub(crate) struct LookupCheckVars<F, FE, P, const D2: usize>
 where
     F: Field,
@@ -779,7 +885,10 @@ pub(crate) fn eval_packed_lookups_generic<F, FE, P, S, const D: usize, const D2:
     let local_values = vars.get_local_values();
     let next_values = vars.get_next_values();
     let degree = stark.constraint_degree();
-    assert_eq!(degree, 3, "TODO: Allow other constraint degrees.");
+    assert!(
+        degree == 2 || degree == 3,
+        "TODO: Allow other constraint degrees."
+    );
     let mut start = 0;
     for lookup in lookups {
         let num_helper_columns = lookup.num_helper_columns(degree);
@@ -794,8 +903,8 @@ pub(crate) fn eval_packed_lookups_generic<F, FE, P, S, const D: usize, const D2:
                 .map(|col| vec![col.eval_with_next(local_values, next_values)])
                 .collect::<Vec<Vec<P>>>();
 
-            // For each chunk, check that `h_i (x+f_2i) (x+f_{2i+1}) = (x+f_2i) * filter_{2i+1} + (x+f_{2i+1}) * filter_2i` if the chunk has length 2
-            // or if it has length 1, check that `h_i * (x+f_2i) = filter_2i`, where x is the challenge
+            // For each chunk, check that `h_i (x+f_2i) (x+f_{2i+1}) = (x+f_2i) * filter_{2i+1} + (x+f_{2i+1}) * filter_2i`
+            // if the chunk has length 2 or if it has length 1, check that `h_i * (x+f_2i) = filter_2i`, where x is the challenge
             eval_helper_columns(
                 &lookup.filter_columns,
                 &lookup_columns,
@@ -826,6 +935,7 @@ pub(crate) fn eval_packed_lookups_generic<F, FE, P, S, const D: usize, const D2:
     }
 }
 
+#[derive(Debug)]
 pub(crate) struct LookupCheckVarsTarget<const D: usize> {
     pub(crate) local_values: Vec<ExtensionTarget<D>>,
     pub(crate) next_values: Vec<ExtensionTarget<D>>,
@@ -843,13 +953,15 @@ pub(crate) fn eval_ext_lookups_circuit<
     lookup_vars: LookupCheckVarsTarget<D>,
     yield_constr: &mut RecursiveConstraintConsumer<F, D>,
 ) {
-    let one = builder.one_extension();
     let degree = stark.constraint_degree();
     let lookups = stark.lookups();
 
     let local_values = vars.get_local_values();
     let next_values = vars.get_next_values();
-    assert_eq!(degree, 3, "TODO: Allow other constraint degrees.");
+    assert!(
+        degree == 2 || degree == 3,
+        "TODO: Allow other constraint degrees."
+    );
     let mut start = 0;
     for lookup in lookups {
         let num_helper_columns = lookup.num_helper_columns(degree);
