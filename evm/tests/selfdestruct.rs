@@ -96,7 +96,8 @@ fn test_selfdestruct() -> anyhow::Result<()> {
         };
         state_trie_after.insert(sender_nibbles, rlp::encode(&sender_account_after).to_vec());
 
-        // EIP-6780: The account won't be deleted because it wasn't created during this transaction.
+        // EIP-6780: The account won't be deleted because it wasn't created during this
+        // transaction.
         let to_account_before = AccountRlp {
             nonce: 12.into(),
             balance: 0.into(),
