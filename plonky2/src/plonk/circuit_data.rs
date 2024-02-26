@@ -492,6 +492,13 @@ impl<F: RichField + Extendable<D>, const D: usize> CommonCircuitData<F, D> {
             .expect("No gates?")
     }
 
+    pub fn num_constraints(&self) -> usize {
+        self.gates
+            .iter()
+            .map(|g| g.0.num_constraints())
+            .sum::<usize>()
+    }
+
     pub const fn quotient_degree(&self) -> usize {
         self.quotient_degree_factor * self.degree()
     }
